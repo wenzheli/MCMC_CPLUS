@@ -1,0 +1,59 @@
+﻿Build started 10/5/2014 4:19:57 PM.
+     1>Project "c:\Users\wenzhe\documents\visual studio 2013\Projects\MCMC_BIG\Test\Test.vcxproj" on node 2 (Rebuild target(s)).
+     1>ClCompile:
+         C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\CL.exe /c /ZI /nologo /W3 /WX- /sdl /Od /Oy- /D WIN32 /D _DEBUG /D _CONSOLE /D _LIB /D _UNICODE /D UNICODE /Gm /EHsc /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Fo"Debug\\" /Fd"Debug\vc120.pdb" /Gd /TP /analyze- /errorReport:prompt global.cpp main.cpp myrandom.cpp
+         myrandom.cpp
+         main.cpp
+     1>c:\users\wenzhe\documents\visual studio 2013\projects\mcmc_big\test\network.h(56): warning C4244: '=' : conversion from 'float' to 'size_t', possible loss of data
+     1>c:\users\wenzhe\documents\visual studio 2013\projects\mcmc_big\test\network.h(168): warning C4244: 'initializing' : conversion from 'size_t' to 'float', possible loss of data
+     1>c:\users\wenzhe\documents\visual studio 2013\projects\mcmc_big\test\mcmc_sampler_batch.h(302): warning C4018: '<' : signed/unsigned mismatch
+     1>c:\users\wenzhe\documents\visual studio 2013\projects\mcmc_big\test\mcmc_sampler_batch.h(308): warning C4018: '<' : signed/unsigned mismatch
+     1>c:\users\wenzhe\documents\visual studio 2013\projects\mcmc_big\test\mcmc_sampler_batch.h(314): warning C4018: '<' : signed/unsigned mismatch
+     1>c:\users\wenzhe\documents\visual studio 2013\projects\mcmc_big\test\mcmc_sampler_batch.h(359): warning C4018: '<' : signed/unsigned mismatch
+     1>c:\users\wenzhe\documents\visual studio 2013\projects\mcmc_big\test\mcmc_sampler_batch.h(366): warning C4018: '<' : signed/unsigned mismatch
+     1>c:\users\wenzhe\documents\visual studio 2013\projects\mcmc_big\test\mcmc_sampler_stochastic.h(161): warning C4018: '<' : signed/unsigned mismatch
+     1>c:\users\wenzhe\documents\visual studio 2013\projects\mcmc_big\test\mcmc_sampler_stochastic.h(168): warning C4018: '<' : signed/unsigned mismatch
+     1>c:\users\wenzhe\documents\visual studio 2013\projects\mcmc_big\test\mcmc_sampler_stochastic.h(216): warning C4018: '<' : signed/unsigned mismatch
+     1>c:\users\wenzhe\documents\visual studio 2013\projects\mcmc_big\test\mcmc_sampler_stochastic.h(222): warning C4018: '<' : signed/unsigned mismatch
+     1>c:\users\wenzhe\documents\visual studio 2013\projects\mcmc_big\test\mcmc_sampler_stochastic.h(227): warning C4018: '<' : signed/unsigned mismatch
+     1>c:\users\wenzhe\documents\visual studio 2013\projects\mcmc_big\test\main.cpp(40): warning C4305: 'argument' : truncation from 'double' to 'float'
+     1>c:\program files (x86)\microsoft visual studio 12.0\vc\include\utility(144): warning C4244: 'initializing' : conversion from 'const int' to 'float', possible loss of data
+                 c:\users\wenzhe\documents\visual studio 2013\projects\mcmc_big\test\network.h(194) : see reference to function template instantiation 'std::pair<mcmc::OrderedEdgeSet *,float>::pair<mcmc::OrderedEdgeSet*&,const int&,void>(_Other1,_Other2)' being compiled
+                 with
+                 [
+                     _Other1=mcmc::OrderedEdgeSet *&
+         ,            _Other2=const int &
+                 ]
+                 c:\users\wenzhe\documents\visual studio 2013\projects\mcmc_big\test\network.h(194) : see reference to function template instantiation 'std::pair<mcmc::OrderedEdgeSet *,float>::pair<mcmc::OrderedEdgeSet*&,const int&,void>(_Other1,_Other2)' being compiled
+                 with
+                 [
+                     _Other1=mcmc::OrderedEdgeSet *&
+         ,            _Other2=const int &
+                 ]
+     1>c:\program files (x86)\microsoft visual studio 12.0\vc\include\utility(144): warning C4244: 'initializing' : conversion from 'size_t' to 'float', possible loss of data
+                 c:\users\wenzhe\documents\visual studio 2013\projects\mcmc_big\test\network.h(325) : see reference to function template instantiation 'std::pair<mcmc::OrderedEdgeSet *,float>::pair<mcmc::OrderedEdgeSet*&,size_t,void>(_Other1,_Other2 &&)' being compiled
+                 with
+                 [
+                     _Other1=mcmc::OrderedEdgeSet *&
+         ,            _Other2=size_t
+                 ]
+                 c:\users\wenzhe\documents\visual studio 2013\projects\mcmc_big\test\network.h(325) : see reference to function template instantiation 'std::pair<mcmc::OrderedEdgeSet *,float>::pair<mcmc::OrderedEdgeSet*&,size_t,void>(_Other1,_Other2 &&)' being compiled
+                 with
+                 [
+                     _Other1=mcmc::OrderedEdgeSet *&
+         ,            _Other2=size_t
+                 ]
+         global.cpp
+         Generating Code...
+       Link:
+         C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\link.exe /ERRORREPORT:PROMPT /OUT:"c:\Users\wenzhe\documents\visual studio 2013\Projects\MCMC_BIG\Debug\Test.exe" /INCREMENTAL /NOLOGO kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /MANIFEST /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /manifest:embed /DEBUG /PDB:"c:\Users\wenzhe\documents\visual studio 2013\Projects\MCMC_BIG\Debug\Test.pdb" /SUBSYSTEM:CONSOLE /TLBID:1 /DYNAMICBASE /NXCOMPAT /IMPLIB:"c:\Users\wenzhe\documents\visual studio 2013\Projects\MCMC_BIG\Debug\Test.lib" /MACHINE:X86 /PROFILE Debug\global.obj
+         Debug\main.obj
+         Debug\myrandom.obj
+     1>LINK : warning LNK4075: ignoring '/INCREMENTAL' due to '/PROFILE' specification
+     1>global.obj : warning LNK4075: ignoring '/EDITANDCONTINUE' due to '/OPT:LBR' specification
+         Test.vcxproj -> c:\Users\wenzhe\documents\visual studio 2013\Projects\MCMC_BIG\Debug\Test.exe
+     1>Done Building Project "c:\Users\wenzhe\documents\visual studio 2013\Projects\MCMC_BIG\Test\Test.vcxproj" (Rebuild target(s)).
+
+Build succeeded.
+
+Time Elapsed 00:00:08.81
