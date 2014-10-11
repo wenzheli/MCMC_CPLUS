@@ -89,6 +89,7 @@ namespace mcmc {
 			}
 
 			double cal_perplexity_held_out() {
+				cout<<"calling cal_perplexity_held_out";
 				return cal_perplexity(network.get_held_out_set());
 			}
 
@@ -134,15 +135,27 @@ namespace mcmc {
 					const Edge &e = edge->first;
 					double edge_likelihood = cal_edge_likelihood(pi[e.first], pi[e.second],
 						edge->second, beta);
+					//cout<<"edge likelihood"<<edge_likelihood<<endl;
+
+					if (std::isnan(edge_likelihood)){
+						cout<<"potential bug";
+					}
 					// std::cerr << std::fixed << std::setprecision(12) << e << " in? " << (e.in(network.get_linked_edges()) ? "True" : "False") << " -> " << edge_likelihood << std::endl;
 					if (e.in(network.get_linked_edges())) {
 						link_count++;
 						link_likelihood += edge_likelihood;
+
+						if (std::isnan(link_likelihood)){
+							cout<<"potential bug";
+						}
 					}
 					else {
 						assert(!present(network.get_linked_edges(), e));
 						non_link_count++;
 						non_link_likelihood += edge_likelihood;
+						if (std::isnan(non_link_likelihood)){
+							cout<<"potential bug";
+						}
 					}
 				}
 				// std::cerr << std::setprecision(12) << "ratio " << link_ratio << " count: link " << link_count << " " << link_likelihood << " non-link " << non_link_count << " " << non_link_likelihood << std::endl;
@@ -152,7 +165,10 @@ namespace mcmc {
 						//         (1-self._link_ratio)*(non_link_likelihood/non_link_count)
 
 				// direct calculation.
-				double avg_likelihood = (link_likelihood + non_link_likelihood) / (link_count + non_link_count);
+				double avg_likelihood = 0.0;
+				if (link_count + non_link_count != 0){
+					avg_likelihood = (link_likelihood + non_link_likelihood) / (link_count + non_link_count);
+				}
 				if (true) {
 					double avg_likelihood1 = link_ratio * (link_likelihood / link_count) + \
 						(1.0 - link_ratio) * (non_link_likelihood / non_link_count);

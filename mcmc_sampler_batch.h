@@ -233,6 +233,7 @@ namespace mcmc {
 				while (step_count < max_iteration && !is_converged()) {
 					auto l1 = std::chrono::system_clock::now();
 					//print "step: " + str(self._step_count)
+					cout<<"calling hold out...";
 					double ppx_score = cal_perplexity_held_out();
 					std::cout << std::fixed << std::setprecision(12) << "perplexity for hold out set: " << ppx_score << std::endl;
 					ppxs_held_out.push_back(ppx_score);

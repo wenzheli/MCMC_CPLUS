@@ -5,6 +5,7 @@
 #include "dataset.h"
 #include "relativity.h"
 #include "tiny.h"
+#include "hepph.h"
 
 namespace mcmc {
 	namespace preprocess {
@@ -29,7 +30,7 @@ namespace mcmc {
 					dataObj = new Relativity(filename);
 				}
 				else if (dataset_name == "hep_ph") {
-					// dataObj = new HepPH(filename);
+					 dataObj = new HEPPH(filename);
 				}
 				else if (dataset_name == "astro_ph") {
 					// dataObj = new AstroPH(filename);

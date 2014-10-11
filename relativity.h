@@ -7,6 +7,7 @@
 #include <set>
 #include <fstream>
 
+
 using namespace std;
 namespace mcmc {
 	namespace preprocess {
@@ -17,6 +18,10 @@ namespace mcmc {
 		* Process relativity data set
 		*/
 		class Relativity : public DataSet {
+
+		public:
+			const int MAX_NODES = 2000;
+
 		public:
 			Relativity(const std::string &filename) : DataSet(filename == "" ? "CA-GrQc.txt" : filename) {
 			}
@@ -28,14 +33,10 @@ namespace mcmc {
 			* The data is stored in .txt file. The format of data is as follows, the first column
 			* is line number. Within each line, it is tab separated.
 			*
-			* [1] some texts
-			* [2] some texts
-			* [3] some texts
-			* [4] some texts
-			* [5] 1    100
-			* [6] 1    103
-			* [7] 4    400
-			* [8] ............
+			* [1] 1    100
+			* [2] 1    103
+			* [3] 4    400
+			* [4] ............
 			*
 			* However, the node ID is not increasing by 1 every time. Thus, we re-format
 			* the node ID first.
@@ -47,13 +48,15 @@ namespace mcmc {
 				}
 
 				std::string line;
-				for (int i = 0; i < 4; i++) {
-					std::getline(infile, line);
-				}
-
+				
 				// start from the 5th line.
 				std::set<int> vertex;	// ordered set
 				std::vector<mcmc::Edge> edge;
+
+				for (int i = 0; i < 4; i++){
+					std::getline(infile, line);
+				}
+
 				while (std::getline(infile, line)) {
 					int a;
 					int b;
@@ -89,8 +92,18 @@ namespace mcmc {
 					if (node1 == node2) {
 						continue;
 					}
+
+					if (node1 >= MAX_NODES || node2 >= MAX_NODES){
+						continue;
+					}
+
 					E->insert(Edge(std::min(node1, node2), std::max(node1, node2)));
 				}
+
+				N = MAX_NODES;
+				
+				cout<< "# of edges: "<<E->size()<<endl;
+				cout<< "# of nodes: "<<N<<endl;
 
 				return new Data(NULL, E, N);
 			}

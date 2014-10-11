@@ -62,7 +62,7 @@ namespace mcmc {
 				// control parameters for learning
 				 //num_node_sample = static_cast< ::size_t>(std::sqrt(network.get_num_nodes()));
 				// TODO: automative update.....
-				num_node_sample = 30;
+				num_node_sample = N/100;
 
 				// model parameters and re-parameterization
 				// since the model parameter - \pi and \beta should stay in the simplex,
@@ -96,10 +96,10 @@ namespace mcmc {
 				while (step_count < max_iteration && !is_converged()) {
 					auto l1 = std::chrono::system_clock::now();
 
-					if (step_count % 100 == 0){
+					if (step_count % 10 == 0){
 
 						double ppx_score = cal_perplexity_held_out();
-						std::cout << std::fixed << std::setprecision(12) << "perplexity for hold out set: " << ppx_score << std::endl;
+						std::cout << std::fixed << std::setprecision(12) << "step count: "<<step_count<<"perplexity for hold out set: " << ppx_score << std::endl;
 						ppxs_held_out.push_back(ppx_score);
 					}
 					//print "step: " + str(self._step_count)
@@ -121,6 +121,7 @@ namespace mcmc {
 					for (auto node = nodes.begin();
 						node != nodes.end();
 						node++){
+						//cout<<"current node is: "<<*node<<endl;
 						OrderedVertexSet neighbors = sample_neighbor_nodes(num_node_sample, *node);
 						update_phi(*node, neighbors);
 					}
@@ -300,8 +301,9 @@ namespace mcmc {
 					f.close()
 #endif
 
+#if 0
 
-					int sample_z_ab_from_edge(int y,
+			int sample_z_ab_from_edge(int y,
 					const std::vector<double> &pi_a,
 					const std::vector<double> &pi_b,
 					const std::vector<double> &beta,
@@ -355,6 +357,11 @@ namespace mcmc {
 				return -1;
 				}
 
+#endif 
+
+		void setNumNodeSample(int numSample){
+			num_node_sample = numSample;
+		}
 
 		protected:
 			// replicated in both mcmc_sampler_
@@ -366,6 +373,7 @@ namespace mcmc {
 
 			std::vector<std::vector<double> > theta;		// parameterization for \beta
 			std::vector<std::vector<double> > phi;			// parameterization for \pi
+
 		};
 
 	}	// namespace learning

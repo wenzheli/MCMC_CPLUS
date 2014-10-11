@@ -1,5 +1,5 @@
-#ifndef MCMC_PREPROCESS_TINY_H__
-#define MCMC_PREPROCESS_TINY_H__
+#ifndef MCMC_PREPROCESS_HEPPH_H__
+#define MCMC_PREPROCESS_HEPPH_H__
 
 #include "data.h"
 #include "dataset.h"
@@ -17,16 +17,16 @@ namespace mcmc {
 		/**
 		* Process relativity data set
 		*/
-		class TinyNetwork : public DataSet {
+		class HEPPH : public DataSet {
 
 		public:
-			const int MAX_NODES = 100;
+			const int MAX_NODES = 5000;
 
 		public:
-			TinyNetwork(const std::string &filename) : DataSet(filename == "" ? "Tiny.txt" : filename) {
+			HEPPH(const std::string &filename) : DataSet(filename == "" ? "hep_ph.txt" : filename) {
 			}
 
-			virtual ~TinyNetwork() {
+			virtual ~HEPPH() {
 			}
 
 			/**
@@ -52,6 +52,11 @@ namespace mcmc {
 				// start from the 5th line.
 				std::set<int> vertex;	// ordered set
 				std::vector<mcmc::Edge> edge;
+
+				for (int i = 0; i < 4; i++){
+					std::getline(infile, line);
+				}
+
 				while (std::getline(infile, line)) {
 					int a;
 					int b;
@@ -96,6 +101,9 @@ namespace mcmc {
 				}
 
 				N = MAX_NODES;
+				
+				cout<< "# of edges: "<<E->size()<<endl;
+				cout<< "# of nodes: "<<N<<endl;
 
 				return new Data(NULL, E, N);
 			}
@@ -106,3 +114,4 @@ namespace mcmc {
 }	// namespace mcmc
 
 #endif	// ndef MCMC_PREPROCESS_RELATIVITY_H__
+

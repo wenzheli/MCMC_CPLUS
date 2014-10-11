@@ -19,20 +19,19 @@
 #include "global.h"
 int main(int argc, char *argv[]) {
 	Options args;
-	args.alpha = 0.01;
+	args.alpha = 0.03;
 	args.eta0 = 1;
 	args.eta1 = 1;
-	args.K = 10;
+	args.K = 30;
 	args.mini_batch_size = 50;
-	args.max_iteration = 100000;
+	args.max_iteration = 1000000;
 	args.epsilon = 0.0000001;
 	args.a = 0.01;
 	args.b = 1024;
 	args.c = 0.55;
-	args.dataset_class = "tiny";
+	args.dataset_class = "hep_ph";
 
 	
-
 	clock_t t1, t2;
 	t1 = clock();
 	mcmc::preprocess::DataFactory df(args.dataset_class, args.filename);
