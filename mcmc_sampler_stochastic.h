@@ -62,7 +62,7 @@ namespace mcmc {
 				// control parameters for learning
 				 //num_node_sample = static_cast< ::size_t>(std::sqrt(network.get_num_nodes()));
 				// TODO: automative update.....
-				num_node_sample = N/100;
+				num_node_sample = N/10;
 
 				// model parameters and re-parameterization
 				// since the model parameter - \pi and \beta should stay in the simplex,
@@ -371,9 +371,10 @@ namespace mcmc {
 
 			::size_t num_node_sample;
 
-			std::vector<std::vector<double> > theta;		// parameterization for \beta
-			std::vector<std::vector<double> > phi;			// parameterization for \pi
-
+			//std::vector<std::vector<double> > theta;		// parameterization for \beta
+			//std::vector<std::vector<double> > phi;			// parameterization for \pi
+			double** theta;
+			double** phi;
 		};
 
 	}	// namespace learning

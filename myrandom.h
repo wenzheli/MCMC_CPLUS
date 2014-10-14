@@ -37,6 +37,14 @@ namespace mcmc {
 				return (1.0 * rand() / RAND_MAX);
 			}
 
+			double* randnArray(::size_t K){
+				double* r = new double[K];
+				for (::size_t i = 0; i < K; i++) {
+					r[i] = normalDistribution(generator);
+				}
+
+				return r;
+			}
 
 			std::vector<double> randn(::size_t K) {
 #if __GNUC_MINOR__ >= 0
@@ -167,6 +175,24 @@ namespace mcmc {
 			template <class Element>
 			std::list<Element> *sampleList(const std::unordered_set<Element> *population, ::size_t count) {
 				return sampleList(*population, count);
+			}
+
+
+			double** gammaArray(double p1, double p2, ::size_t n1, ::size_t n2){
+				double** a;
+				a = new double*[n1];
+				for (int i = 0; i < n1; i++){
+					a[i] = new double[n2];
+				}
+				std::gamma_distribution<double> gammaDistribution(p1, p2);
+
+				for (::size_t i = 0; i < n1; i++) {
+					for (::size_t j = 0; j < n2; j++) {
+						a[i][j] = gammaDistribution(generator);
+					}
+				}
+
+				return a;
 			}
 
 

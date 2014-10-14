@@ -95,7 +95,7 @@ namespace mcmc {
 					E->insert(Edge(std::min(node1, node2), std::max(node1, node2)));
 				}
 
-				N = MAX_NODES;
+				//N = MAX_NODES;
 
 				return new Data(NULL, E, N);
 			}

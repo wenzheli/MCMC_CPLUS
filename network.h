@@ -91,12 +91,6 @@ namespace mcmc {
 		*/
 		EdgeSample sample_mini_batch(::size_t mini_batch_size, strategy::strategy strategy) const {
 			switch (strategy) {
-			case strategy::RANDOM_PAIR:
-				return random_pair_sampling(mini_batch_size);
-			case strategy::RANDOM_NODE:
-				return random_node_sampling();
-			case strategy::STRATIFIED_RANDOM_PAIR:
-				return stratified_random_pair_sampling(mini_batch_size);
 			case strategy::STRATIFIED_RANDOM_NODE:
 				return stratified_random_node_sampling(10);
 			default:
@@ -132,134 +126,11 @@ namespace mcmc {
 			this->num_pieces = num_pieces;
 		}
 
-		/**
-		* sample list of edges from the whole training network uniformly, regardless
-		* of links or non-links edges.The sampling approach is pretty simple: randomly generate
-		* one edge and then check if that edge passes the conditions. The iteration
-		* stops until we get enough (mini_batch_size) edges.
-		*
-		* @return the caller must delete the result
-		*/
-		EdgeSample random_pair_sampling(::size_t mini_batch_size) const {
 
-			OrderedEdgeSet *mini_batch_set = new OrderedEdgeSet();
-
-			// iterate until we get $p$ valid edges.
-			for (::size_t p = mini_batch_size; p > 0; p--) {
-				int firstIdx = Random::random->randint(0, N);
-				int secondIdx = Random::random->randint(0, N);
-				if (firstIdx == secondIdx) {
-					continue;
-				}
-
-				// make sure the first index is smaller than the second one, since
-				// we are dealing with undirected graph.
-				Edge edge(std::min(firstIdx, secondIdx), std::max(firstIdx, secondIdx));
-
-				// the edge should not be in  1)hold_out set, 2)test_set  3) mini_batch_set (avoid duplicate)
-				if (edge.in(held_out_map) || edge.in(test_map) || edge.in(*mini_batch_set)) {
-					continue;
-				}
-
-				// great, we put it into the mini_batch list.
-				mini_batch_set->insert(edge);
-			}
-
-			float scale = ((N * (N - 1)) / 2) / mini_batch_size;
-
-			return EdgeSample(mini_batch_set, scale);
-		}
+		
 
 
-		/**
-		* A set consists of all the pairs that involve one of the N nodes: we first sample one of
-		* the node from N nodes, and sample all the edges for that node. h(x) = 1/N
-		*/
-		EdgeSample random_node_sampling() const {
-			OrderedEdgeSet *mini_batch_set = new OrderedEdgeSet();
-
-			// randomly select the node ID
-			int nodeId = Random::random->randint(0, N);
-			for (int i = 0; i < N; i++) {
-				// make sure the first index is smaller than the second one, since
-				// we are dealing with undirected graph.
-				Edge edge(std::min(nodeId, i), std::max(nodeId, i));
-				if (edge.in(held_out_map) || edge.in(test_map) || edge.in(*mini_batch_set)) {
-					continue;
-				}
-
-				mini_batch_set->insert(edge);
-			}
-
-			return EdgeSample(mini_batch_set, N);
-		}
-
-
-		/**
-		* We divide the edges into linked and non-linked edges, and each time either sample
-		* mini-batch from linked-edges or non-linked edges.  g(x) = 1/N_0 for non-link and
-		* 1/N_1 for link, where N_0-> number of non-linked edges, N_1-> # of linked edges.
-		*/
-		EdgeSample stratified_random_pair_sampling(::size_t mini_batch_size) const {
-			int p = (int)mini_batch_size;
-
-			OrderedEdgeSet *mini_batch_set = new OrderedEdgeSet();
-
-			int flag = Random::random->randint(0, 2);
-
-			if (flag == 0) {
-				// sample mini-batch from linked edges
-				std::cerr << "FIXME: replace EdgeList w/ (unordered) EdgeSet again" << std::endl;
-				auto sampled_linked_edges = Random::random->sampleList(linked_edges, mini_batch_size * 2);
-				for (auto edge = sampled_linked_edges->cbegin();
-					edge != sampled_linked_edges->cend();
-					edge++) {
-					if (p < 0) {
-						//std::cerr  << ": Are you sure p < 0 is a good idea?" << std::endl;
-						break;
-					}
-
-					if (edge->in(held_out_map) || edge->in(test_map) || edge->in(*mini_batch_set)) {
-						continue;
-					}
-
-					mini_batch_set->insert(*edge);
-					p--;
-				}
-
-				delete sampled_linked_edges;
-
-				return EdgeSample(mini_batch_set, linked_edges->size() / (float)mini_batch_size);
-
-			}
-			else {
-				// sample mini-batch from non-linked edges
-				while (p > 0) {
-					int firstIdx = Random::random->randint(0, N);
-					int secondIdx = Random::random->randint(0, N);
-
-					if (firstIdx == secondIdx) {
-						continue;
-					}
-
-					// ensure the first index is smaller than the second one.
-					Edge edge(std::min(firstIdx, secondIdx), std::max(firstIdx, secondIdx));
-
-					// check conditions:
-					if (edge.in(*linked_edges) || edge.in(held_out_map) ||
-						edge.in(test_map) || edge.in(*mini_batch_set)) {
-						continue;
-					}
-
-					mini_batch_set->insert(edge);
-					p--;
-				}
-
-				return EdgeSample(mini_batch_set,
-					(N * (N - 1)) / 2 - linked_edges->size() / (float)mini_batch_size);
-			}
-		}
-
+	
 
 		/**
 		* stratified sampling approach gives more attention to link edges (the edge is connected by two

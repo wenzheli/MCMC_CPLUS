@@ -24,7 +24,7 @@ namespace mcmc {
 
 				// model priors
 				alpha = args.alpha;
-				eta.resize(2);
+				eta = new double[2];
 				eta[0] = args.eta0;
 				eta[1] = args.eta1;
 
@@ -36,8 +36,21 @@ namespace mcmc {
 				N = network.get_num_nodes();
 
 				// model parameters to learn
-				beta = std::vector<double>(K, 0.0);
-				pi = std::vector<std::vector<double> >(N, std::vector<double>(K, 0.0));
+				//beta = std::vector<double>(K, 0.0);
+				//pi = std::vector<std::vector<double> >(N, std::vector<double>(K, 0.0));
+				beta = new double[K]();
+				for (int k = 0; k < K; k++){
+					beta[k] = 0;
+				}
+				cout << beta[0];
+
+				pi = new double*[N];
+				for (int i = 0; i < N; i++){
+					pi[i] = new double[K];
+				}
+
+				cout << pi[0][0];
+
 
 				// parameters related to sampling
 				mini_batch_size = args.mini_batch_size;
@@ -203,10 +216,10 @@ namespace mcmc {
 			* such that:  p(y|*) = \sum_{z_ab,z_ba}^{} p(y, z_ab,z_ba|pi_a, pi_b, beta)
 			* but this calculation can be done in O(K), by using some trick.
 			*/
-			double cal_edge_likelihood(const std::vector<double> &pi_a,
-				const std::vector<double> &pi_b,
+			double cal_edge_likelihood(double* pi_a,
+				double* pi_b,
 				bool y,
-				const std::vector<double> &beta) const {
+				const double* beta) const {
 				double s = 0.0;
 				if (y) {
 					for (::size_t k = 0; k < K; k++) {
@@ -261,13 +274,15 @@ namespace mcmc {
 			const Network &network;
 
 			double alpha;
-			std::vector<double> eta;
+			double* eta;
 			::size_t K;
 			double epsilon;
 			::size_t N;
 
-			std::vector<double> beta;
-			std::vector<std::vector<double>> pi;
+			//std::vector<double> beta;
+			//std::vector<std::vector<double>> pi;
+			double* beta;
+			double** pi;
 
 			::size_t mini_batch_size;
 			double link_ratio;

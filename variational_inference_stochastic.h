@@ -310,12 +310,15 @@ namespace mcmc {
 				// pi = gamma/np.sum(gamma,1)[:,np.newaxis];
 				// temp = lamda/np.sum(lamda,1)[:,np.newaxis];
 				// beta = temp[:,1];
+				
+#if 0
 				np::row_normalize(&pi, gamma);
 
 				std::vector<std::vector<double> > temp(lamda.size(), std::vector<double>(lamda[0].size()));
 				np::row_normalize(&temp, lamda);
 				// std::transform(temp.begin(), temp.end(), beta.begin(), np::SelectColumn<double>(1));
 				std::transform(temp.begin(), temp.end(), beta.begin(), np::SelectColumn<double>(0));
+#endif
 			}
 
 

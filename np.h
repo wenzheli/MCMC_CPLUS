@@ -29,6 +29,8 @@ namespace mcmc {
 			return std::accumulate(a.begin(), a.end(), static_cast<Type>(0));
 		}
 
+	
+
 		template <typename T>
 		void normalize(std::vector<T> &r, const std::vector<T> &a) {
 			struct DivideBy {
