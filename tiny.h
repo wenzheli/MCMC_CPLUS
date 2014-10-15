@@ -66,7 +66,7 @@ namespace mcmc {
 
 				std::vector<int> nodelist(vertex.begin(), vertex.end()); // use range constructor, retain order
 
-				::size_t N = nodelist.size();
+				int N = nodelist.size();
 
 				// change the node ID to make it start from 0
 				std::unordered_map<int, int> node_id_map;

@@ -50,7 +50,7 @@ namespace mcmc {
 				// control parameters for learning
 				// TODO need to find the optimal value from experiments. If the value is too small
 				// 		then it will add more variance.. if too large, computational complexity....
-				num_node_sample = static_cast< ::size_t>(std::sqrt(network.get_num_nodes()));
+				num_node_sample = static_cast< int>(std::sqrt(network.get_num_nodes()));
 
 				// model parameters and re-parameterization
 				// since the model parameter - \pi and \beta should stay in the simplex,
@@ -134,7 +134,7 @@ namespace mcmc {
 			* update pi for current node i.
 			could leave this function as it is, but we don't use this for now... [wenzhe]
 			*/
-			void update_pi_for_node(::size_t i, const std::vector<int> &z, std::vector<std::vector<double> > *phi_star, ::size_t n) const {
+			void update_pi_for_node(int i, const std::vector<int> &z, std::vector<std::vector<double> > *phi_star, int n) const {
 				// update gamma, only update node in the grad
 				double eps_t;
 
@@ -159,12 +159,12 @@ namespace mcmc {
 					grads[k] = -1 *n / phi_i_sum;
 				}
 
-				for (::size_t k = 0; k < K; k++) {
+				for (int k = 0; k < K; k++) {
 					grads[k] += 1.0 / phi[i][k] * z[k];
 				}
 
 				// update the phi
-				for (::size_t k = 0; k < K; k++) {
+				for (int k = 0; k < K; k++) {
 #ifdef EFFICIENCY_FOLLOWS_PYTHON
 					// FIXME RFHH a**0.5 * b**0.5 better written as sqrt(a*b) ?
 					(*phi_star)[i][k] = std::abs(phi[i][k] + eps_t / 2 * (alpha - phi[i][k] +
@@ -184,7 +184,7 @@ namespace mcmc {
 
 
 			// could leave this function as it is, but we don't use this for now... [wenzhe]
-			int sample_z_for_each_edge(double y, const std::vector<double> &pi_a, const std::vector<double> &pi_b, const std::vector<double> &beta, ::size_t K) const {
+			int sample_z_for_each_edge(double y, const std::vector<double> &pi_a, const std::vector<double> &pi_b, const std::vector<double> &beta, int K) const {
 				/**
 				* sample latent variables z_ab and z_ba
 				* but we don't need to consider all of the cases. i.e  (z_ab = j, z_ba = q) for all j and p.
@@ -204,17 +204,17 @@ namespace mcmc {
 				std::vector<double> p(K + 1);
 #ifdef EFFICIENCY_FOLLOWS_PYTHON
 				// FIXME pow for selecting after y = 0 or 1
-				for (::size_t k = 0; k < K; k++) {
+				for (int k = 0; k < K; k++) {
 					p[k] = std::pow(beta[k], y) * pow(1 - beta[k], 1 - y) * pi_a[k] * pi_b[k];
 				}
 #else
 				if (y == 1) {
-					for (::size_t k = 0; k < K; k++) {
+					for (int k = 0; k < K; k++) {
 						p[k] = beta[k] * pi_a[k] * pi_b[k];
 					}
 				}
 				else {
-					for (::size_t k = 0; k < K; k++) {
+					for (int k = 0; k < K; k++) {
 						p[k] = (1 - beta[k]) * pi_a[k] * pi_b[k];
 					}
 				}
@@ -229,7 +229,7 @@ namespace mcmc {
 				double location = Random::random->random() * bounds[K];
 
 				// get the index of bounds that containing location.
-				for (::size_t i = 0; i < K; i++) {
+				for (int i = 0; i < K; i++) {
 					if (location <= bounds[i]) {
 						return i;
 					}
@@ -283,7 +283,7 @@ namespace mcmc {
 					/*  wenzhe commented this out...
 					std::vector<std::vector<double> > phi_star(pi);
 					// iterate through each node, and update parameters pi_a
-					for (::size_t i = 0; i < N; i++) {
+					for (int i = 0; i < N; i++) {
 					// update parameter for pi_i
 					//print "updating: " + str(i)
 					auto neighbor_nodes = sample_neighbor_nodes_batch(i);
@@ -297,7 +297,7 @@ namespace mcmc {
 					*/
 
 					// wenzhe's version
-					for (::size_t i = 0; i < N; i++){
+					for (int i = 0; i < N; i++){
 						auto neighbor_nodes = sample_neighbor_nodes_batch(i);
 						update_phi(i, neighbor_nodes);	// update phi for node i
 					}
@@ -405,8 +405,8 @@ namespace mcmc {
 				//   eps_t = a * std::pow(1 + step_count / b, -c);
 				//}
 
-				for (::size_t i = 0; i < N; i++) {
-					for (::size_t j = i + 1; j < N; j++) {
+				for (int i = 0; i < N; i++) {
+					for (int j = i + 1; j < N; j++) {
 						Edge edge(i, j);
 
 						if (edge.in(network.get_held_out_set()) || edge.in(network.get_test_set())) {
@@ -457,8 +457,8 @@ namespace mcmc {
 				}
 				//std::vector<std::vector<double> > noise = Random::random->randn(K, 2);
 				//std::vector<std::vector<double> > theta_star(theta);
-				for (::size_t k = 0; k < K; k++) {
-					for (::size_t i = 0; i < 2; i++) {
+				for (int k = 0; k < K; k++) {
+					for (int i = 0; i < 2; i++) {
 #ifdef EFFICIENCY_FOLLOWS_PYTHON
 						// FIXME rewrite a**0.5 * b**0.5 as sqrt(a * b)
 						theta_star[k][i] = std::abs(theta[k][i] + eps_t / 2 * (eta[i] - theta[k][i] + \
@@ -492,7 +492,7 @@ namespace mcmc {
 				//	double inv_step_count = 1.0 / step_count;
 				//	double one_inv_step_count = 1.0 - inv_step_count;
 				//	MCMCMyOp<double> myOp(inv_step_count, one_inv_step_count);
-				//	for (::size_t k = 0; k < theta.size(); k++) {
+				//	for (int k = 0; k < theta.size(); k++) {
 				//		std::transform(theta[k].begin(), theta[k].end(),
 				//					   theta_star[k].begin(),
 				//					   theta[k].begin(),
@@ -517,7 +517,7 @@ namespace mcmc {
 			double	b;
 			double	c;
 
-			::size_t num_node_sample;						// used for sampling neighborhood nodes
+			int num_node_sample;						// used for sampling neighborhood nodes
 
 			//std::vector<std::vector<double> > theta;		// parameterization for \beta
 			//std::vector<std::vector<double> > phi;			// parameterization for \pi

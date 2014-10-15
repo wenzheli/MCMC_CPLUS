@@ -37,19 +37,19 @@ namespace mcmc {
 				return (1.0 * rand() / RAND_MAX);
 			}
 
-			double* randnArray(::size_t K){
+			double* randnArray(int K){
 				double* r = new double[K];
-				for (::size_t i = 0; i < K; i++) {
+				for (int i = 0; i < K; i++) {
 					r[i] = normalDistribution(generator);
 				}
 
 				return r;
 			}
 
-			std::vector<double> randn(::size_t K) {
+			std::vector<double> randn(int K) {
 #if __GNUC_MINOR__ >= 0
 				auto r = std::vector<double>(K);
-				for (::size_t i = 0; i < K; i++) {
+				for (int i = 0; i < K; i++) {
 					r[i] = normalDistribution(generator);
 				}
 
@@ -61,9 +61,9 @@ namespace mcmc {
 			}
 
 
-			std::vector<std::vector<double> > randn(::size_t K, ::size_t N) {
+			std::vector<std::vector<double> > randn(int K, int N) {
 				std::vector<std::vector<double> > r(K);
-				for (::size_t k = 0; k < K; k++) {
+				for (int k = 0; k < K; k++) {
 					r[k] = randn(N);
 				}
 
@@ -72,11 +72,11 @@ namespace mcmc {
 
 
 		protected:
-			std::unordered_set<int> sample(int from, int upto, ::size_t count) {
+			std::unordered_set<int> sample(int from, int upto, int count) {
 				assert((int)count <= upto - from);
 
 				std::unordered_set<int> accu;
-				for (::size_t i = 0; i < count; i++) {
+				for (int i = 0; i < count; i++) {
 					int r = randint(from, upto);
 					if (accu.find(r) == accu.end()) {
 						accu.insert(r);
@@ -91,10 +91,10 @@ namespace mcmc {
 
 
 			template <class Input, class Result, class Inserter>
-			void sample(Result *result, const Input &input, ::size_t count, Inserter inserter) {
+			void sample(Result *result, const Input &input, int count, Inserter inserter) {
 				std::unordered_set<int> accu = sample(0, (int)input.size(), count);
 
-				::size_t c = 0;
+				int c = 0;
 				for (auto i : input) {
 					if (accu.find(c) != accu.end()) {
 						inserter(*result, i);
@@ -106,7 +106,7 @@ namespace mcmc {
 
 		public:
 			template <class List>
-			List *sample(const List &population, ::size_t count) {
+			List *sample(const List &population, int count) {
 				List *result = new List();
 
 				struct Inserter {
@@ -125,13 +125,13 @@ namespace mcmc {
 
 
 			template <class List>
-			List *sample(const List *population, ::size_t count) {
+			List *sample(const List *population, int count) {
 				return sample(*population, count);
 			}
 
 
 			template <class Element>
-			std::vector<Element> *sample(const std::vector<Element> &population, ::size_t count) {
+			std::vector<Element> *sample(const std::vector<Element> &population, int count) {
 				std::unordered_set<int> accu;
 				std::vector<Element> *result = new std::vector<Element>(accu.size());
 
@@ -146,14 +146,14 @@ namespace mcmc {
 			}
 
 
-			std::vector<int> *sampleRange(int N, ::size_t count) {
+			std::vector<int> *sampleRange(int N, int count) {
 				auto accu = sample(0, N, count);
 				return new std::vector<int>(accu.begin(), accu.end());
 			}
 
 
 			template <class Element>
-			std::list<Element> *sampleList(const std::unordered_set<Element> &population, ::size_t count) {
+			std::list<Element> *sampleList(const std::unordered_set<Element> &population, int count) {
 				std::list<Element> *result = new std::list<Element>();
 				struct Inserter {
 					void operator() (std::list<Element> &list, Element &item) {
@@ -173,12 +173,12 @@ namespace mcmc {
 
 
 			template <class Element>
-			std::list<Element> *sampleList(const std::unordered_set<Element> *population, ::size_t count) {
+			std::list<Element> *sampleList(const std::unordered_set<Element> *population, int count) {
 				return sampleList(*population, count);
 			}
 
 
-			double** gammaArray(double p1, double p2, ::size_t n1, ::size_t n2){
+			double** gammaArray(double p1, double p2, int n1, int n2){
 				double** a;
 				a = new double*[n1];
 				for (int i = 0; i < n1; i++){
@@ -186,8 +186,8 @@ namespace mcmc {
 				}
 				std::gamma_distribution<double> gammaDistribution(p1, p2);
 
-				for (::size_t i = 0; i < n1; i++) {
-					for (::size_t j = 0; j < n2; j++) {
+				for (int i = 0; i < n1; i++) {
+					for (int j = 0; j < n2; j++) {
 						a[i][j] = gammaDistribution(generator);
 					}
 				}
@@ -196,15 +196,15 @@ namespace mcmc {
 			}
 
 
-			std::vector<std::vector<double> > gamma(double p1, double p2, ::size_t n1, ::size_t n2) {
+			std::vector<std::vector<double> > gamma(double p1, double p2, int n1, int n2) {
 				// std::vector<std::vector<double> > *a = new std::vector<double>(n1, std::vector<double>(n2, 0.0));
 				std::vector<std::vector<double> > a(n1, std::vector<double>(n2));
 #if __GNUC_MINOR__ >= 0
 				
 				std::gamma_distribution<double> gammaDistribution(p1, p2);
 
-				for (::size_t i = 0; i < n1; i++) {
-					for (::size_t j = 0; j < n2; j++) {
+				for (int i = 0; i < n1; i++) {
+					for (int j = 0; j < n2; j++) {
 						a[i][j] = gammaDistribution(generator);
 					}
 				}
@@ -261,13 +261,13 @@ namespace mcmc {
 
 
 		public:
-			std::vector<double> randn(::size_t K) {
+			std::vector<double> randn(int K) {
 				std::string line;
 				std::vector<double> r(K);
 
 				getline(noiseReader, line);
 				std::istringstream is(line);
-				for (::size_t k = 0; k < K; k++) {
+				for (int k = 0; k < K; k++) {
 					if (!(is >> r[k])) {
 						throw IOException("end of line");
 					}
@@ -275,7 +275,7 @@ namespace mcmc {
 
 				std::cerr << "Read random.randn[" << K << "]" << std::endl;
 				if (false) {
-					for (::size_t k = 0; k < K; k++) {
+					for (int k = 0; k < K; k++) {
 						// std::cerr << r[k] << " ";
 					}
 					// std::cerr << std::endl;
@@ -285,10 +285,10 @@ namespace mcmc {
 			}
 
 
-			std::vector<std::vector<double> > randn(::size_t K, ::size_t N) {
+			std::vector<std::vector<double> > randn(int K, int N) {
 				// std::cerr << "Read random.randn[" << K << "," << N << "]" << std::endl;
 				std::vector<std::vector<double> > r(K);
-				for (::size_t k = 0; k < K; k++) {
+				for (int k = 0; k < K; k++) {
 					r[k] = randn(N);
 				}
 
@@ -329,14 +329,14 @@ namespace mcmc {
 
 
 			template <class List>
-			List *sample(const List &population, ::size_t count) {
+			List *sample(const List &population, int count) {
 				std::string line;
 				List *result = new List();
 				getline(sampleReader, line);
 
 				std::istringstream is(line);
 
-				for (::size_t i = 0; i < count; i++) {
+				for (int i = 0; i < count; i++) {
 					typename List::key_type key(is);
 					result->insert(key);
 				}
@@ -347,13 +347,13 @@ namespace mcmc {
 
 
 			template <class List>
-			List *sample(const List *population, ::size_t count) {
+			List *sample(const List *population, int count) {
 				return sample(*population, count);
 			}
 
 
 			template <class Element>
-			std::vector<Element> *sample(const std::vector<Element> &population, ::size_t count) {
+			std::vector<Element> *sample(const std::vector<Element> &population, int count) {
 				std::string line;
 				getline(sampleReader, line);
 				std::istringstream is(line);
@@ -361,7 +361,7 @@ namespace mcmc {
 
 				std::vector<Element> *result = new std::vector<Element>(count);
 
-				for (::size_t i = 0; i < count; i++) {
+				for (int i = 0; i < count; i++) {
 					int r;
 
 					if (!(is >> r)) {
@@ -375,7 +375,7 @@ namespace mcmc {
 			}
 
 
-			std::vector<int> *sampleRange(int N, ::size_t count) {
+			std::vector<int> *sampleRange(int N, int count) {
 				std::vector<int> dummy;
 
 				return sample(dummy, count);
@@ -383,14 +383,14 @@ namespace mcmc {
 
 
 			template <class Element>
-			std::list<Element> *sampleList(const std::unordered_set<Element> &population, ::size_t count) {
+			std::list<Element> *sampleList(const std::unordered_set<Element> &population, int count) {
 				std::string line;
 				auto *result = new std::list<Element>();
 				getline(sampleReader, line);
 
 				std::istringstream is(line);
 
-				for (::size_t i = 0; i < count; i++) {
+				for (int i = 0; i < count; i++) {
 					Element key(is);
 					result->push_back(key);
 				}
@@ -401,21 +401,21 @@ namespace mcmc {
 
 
 			template <class Element>
-			std::list<Element> *sampleList(const std::unordered_set<Element> *population, ::size_t count) {
+			std::list<Element> *sampleList(const std::unordered_set<Element> *population, int count) {
 				return sampleList(*population, count);
 			}
 
 
-			std::vector<std::vector<double> > gamma(double p1, double p2, ::size_t n1, ::size_t n2) {
+			std::vector<std::vector<double> > gamma(double p1, double p2, int n1, int n2) {
 				std::vector<std::vector<double> > a(n1, std::vector<double>(n2));
 
 				std::string line;
 
-				for (::size_t i = 0; i < n1; i++) {
+				for (int i = 0; i < n1; i++) {
 					getline(gammaReader, line);
 
 					std::istringstream is(line);
-					for (::size_t j = 0; j < n2; j++) {
+					for (int j = 0; j < n2; j++) {
 						if (!(is >> a[i][j])) {
 							throw IOException("end of line");
 						}

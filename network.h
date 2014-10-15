@@ -89,7 +89,7 @@ namespace mcmc {
 		*  Returns (sampled_edges, scale)
 		*  scale equals to 1/h(x), insuring the sampling gives the unbiased gradients.
 		*/
-		EdgeSample sample_mini_batch(::size_t mini_batch_size, strategy::strategy strategy) const {
+		EdgeSample sample_mini_batch(int mini_batch_size, strategy::strategy strategy) const {
 			switch (strategy) {
 			case strategy::STRATIFIED_RANDOM_NODE:
 				return stratified_random_node_sampling(10);
@@ -98,11 +98,11 @@ namespace mcmc {
 			}
 		}
 
-		::size_t get_num_linked_edges() const {
+		int get_num_linked_edges() const {
 			return linked_edges->size();
 		}
 
-		::size_t get_num_total_edges() const {
+		int get_num_total_edges() const {
 			return num_total_edges;
 		}
 
@@ -122,7 +122,7 @@ namespace mcmc {
 			return test_map;
 		}
 
-		void set_num_pieces(::size_t num_pieces) {
+		void set_num_pieces(int num_pieces) {
 			this->num_pieces = num_pieces;
 		}
 
@@ -143,7 +143,7 @@ namespace mcmc {
 		*         sample edges from all non-links edges for node $i$. The number of edges
 		*         we sample equals to  number of all non-link edges / num_pieces
 		*/
-		EdgeSample stratified_random_node_sampling(::size_t num_pieces) const {
+		EdgeSample stratified_random_node_sampling(int num_pieces) const {
 			// randomly select the node ID
 			int nodeId = Random::random->randint(0, N);
 			// decide to sample links or non-links
@@ -156,8 +156,8 @@ namespace mcmc {
 				/* sample non-link edges */
 				// this is approximation, since the size of self.train_link_map[nodeId]
 				// greatly smaller than N.
-				// ::size_t mini_batch_size = (int)((N - train_link_map[nodeId].size()) / num_pieces);
-				::size_t mini_batch_size = (int)(N / num_pieces);
+				// int mini_batch_size = (int)((N - train_link_map[nodeId].size()) / num_pieces);
+				int mini_batch_size = (int)(N / num_pieces);
 				int p = (int)mini_batch_size;
 
 				while (p > 0) {
@@ -242,7 +242,7 @@ namespace mcmc {
 		* links and non-links from the whole graph.
 		*/
 		void init_held_out_set() {
-			::size_t p = held_out_size / 2;
+			int p = held_out_size / 2;
 
 			// Sample p linked-edges from the network.
 			if (linked_edges->size() < p) {
@@ -382,9 +382,9 @@ namespace mcmc {
 	protected:
 		int			N;					// number of nodes in the graph
 		const EdgeSet *linked_edges;	// all pair of linked edges.
-		::size_t	num_total_edges;	// number of total edges.
+		int	num_total_edges;	// number of total edges.
 		float		held_out_ratio;		// percentage of held-out data size
-		::size_t	held_out_size;
+		int	held_out_size;
 
 		// The map stores all the neighboring nodes for each node, within the training
 		// set. The purpose of keeping this object is to make the stratified sampling
@@ -400,7 +400,7 @@ namespace mcmc {
 		EdgeMap held_out_map;			// store all held out edges
 		EdgeMap test_map;				// store all test edges
 
-		::size_t	num_pieces;
+		int	num_pieces;
 
 	};
 

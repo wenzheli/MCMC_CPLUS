@@ -19,12 +19,12 @@
 #include "global.h"
 int main(int argc, char *argv[]) {
 	Options args;
-	args.alpha = 0.1;
+	args.alpha = 0.02;
 	args.eta0 = 1;
 	args.eta1 = 1;
-	args.K = 10;
+	args.K = 50;
 	args.mini_batch_size = 50;
-	args.max_iteration = 1000;
+	args.max_iteration = 100;
 	args.epsilon = 0.0000001;
 	args.a = 0.01;
 	args.b = 1024;

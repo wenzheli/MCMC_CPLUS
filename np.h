@@ -63,7 +63,7 @@ namespace mcmc {
 			const std::vector<std::vector<T> > &a) {
 			// No: requires normalize to return its result. What about for_each w/ 2 arguments?
 			// std::transform(a.begin(), a.end(), r->begin(), normalize<T>);
-			for (::size_t i = 0; i < a.size(); i++) {
+			for (int i = 0; i < a.size(); i++) {
 				// T row_sum = sum(a[i]);
 				// std::transform(a[i].begin(), a[i].end(), (*r)[i].begin(), DivideBy(row_sum));
 				normalize((*r)[i], a[i]);
@@ -75,7 +75,7 @@ namespace mcmc {
 		template <typename Type>
 		Type sum_abs(const std::vector<Type> &a, const std::vector<Type> &b) {
 			Type diff = static_cast<Type>(0);
-			for (::size_t i = 0; i < a.size(); i++) {
+			for (int i = 0; i < a.size(); i++) {
 				diff += std::abs(a[i] - b[i]);
 			}
 

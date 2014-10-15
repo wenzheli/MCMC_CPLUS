@@ -133,7 +133,7 @@ namespace mcmc {
 						ppxs_held_out.push_back(ppx_score);
 
 						if (step_count > 5000) {
-							::size_t size = avg_log.size();
+							int size = avg_log.size();
 							ppx_score = (1 - 1.0 / (step_count - 50)) * avg_log[size - 1] + 1.0 / (step_count - 50) * ppx_score;
 							avg_log.push_back(ppx_score);
 						}
@@ -208,8 +208,8 @@ namespace mcmc {
 				 const std::vector<double> &gamma_a,
 				 const std::vector<double> &gamma_b,
 				 const std::vector<std::vector<double> > &lamda,
-				::size_t K, double update_threshold, double epsilon,
-				::size_t online_iterations,  const EdgeSet &linked_edges,
+				int K, double update_threshold, double epsilon,
+				int online_iterations,  const EdgeSet &linked_edges,
 				std::vector<double> *phi_ab,
 				std::vector<double> *phi_ba) {
 
@@ -230,13 +230,13 @@ namespace mcmc {
 				// or reach the maximum iterations.
 				// FIXME memo digamma(lamda[k][0]) or digamma(lamda[k][1]) (dependent on y)
 				// FIXME memo digamma(lamda[k][0] + lamda[k][1])
-				for (::size_t i = 0; i < online_iterations; i++) {
+				for (int i = 0; i < online_iterations; i++) {
 					std::vector<double> phi_ab_old(*phi_ab);
 					std::vector<double> phi_ba_old(*phi_ba);
 
 					// first, update phi_ab
 					// FIXME pull the test on (y) out of the loop
-					for (::size_t k = 0; k < K; k++) {
+					for (int k = 0; k < K; k++) {
 						if (y) {
 							u = -(*phi_ba)[k] * log_epsilon;
 							(*phi_ab)[k] = std::exp(digammal(gamma_a[k]) + (*phi_ba)[k] * \
@@ -261,7 +261,7 @@ namespace mcmc {
 
 					// then update phi_ba
 					// FIXME pull the test on (y) out of the loop
-					for (::size_t k = 0; k < K; k++) {
+					for (int k = 0; k < K; k++) {
 						if (y) {
 							u = -(*phi_ab)[k] * log_epsilon;
 							(*phi_ba)[k] = std::exp(digammal(gamma_b[k]) + (*phi_ab)[k] * \
@@ -327,7 +327,7 @@ namespace mcmc {
 				// calculate the gradient for gamma
 				std::vector<std::vector<double> > grad_lamda(K, std::vector<double>(2, 0.0));
 				std::unordered_map<int, std::vector<double> > grad_gamma(N);	// ie. grad[a] = array[] which is K dimensional vector
-				std::unordered_map<int, ::size_t> counter;	// used for scaling
+				std::unordered_map<int, int> counter;	// used for scaling
 				for (auto edge = mini_batch.begin(); edge != mini_batch.end(); edge++) {
 					/*
 					* calculate the gradient for gamma
@@ -368,7 +368,7 @@ namespace mcmc {
 						y = 1;
 					}
 
-					for (::size_t k = 0; k < K; k++) {
+					for (int k = 0; k < K; k++) {
 						grad_lamda[k][0] += phi_ab[k] * phi_ba[k] * y;
 						grad_lamda[k][1] += phi_ab[k] * phi_ba[k] * (1 - y);
 					}
@@ -410,7 +410,7 @@ namespace mcmc {
 				};
 				MyOpIn myOpIn(p_t, alpha, scale);
 				MyOpNotIn myOpNotIn(p_t, alpha);
-				for (::size_t node = 0; node < N; node++) {
+				for (int node = 0; node < N; node++) {
 					if (grad_gamma.find(node) != grad_gamma.end()) {
 						std::transform(gamma[node].begin(), gamma[node].end(), grad_gamma[node].begin(),
 							gamma[node].begin(), myOpIn);
@@ -435,7 +435,7 @@ namespace mcmc {
 					}
 
 					if (step_count > 400) {
-						for (::size_t k = 0; k < K; k++) {
+						for (int k = 0; k < K; k++) {
 							// gamma_star[k] = (1-p_t)*gamma[node->first][k] + p_t * (alpha[k] + scale1 * grad_gamma[node->first][k]);
 							// gamma[node->first][k] = (1-1.0/(step_count))*gamma[node->first][k] + 1.0/(step_count)*gamma_star[k];
 							double gamma_star = (1 - p_t)*gamma[node->first][k] + p_t * (alpha + scale1 * grad_gamma[node->first][k]);
@@ -443,7 +443,7 @@ namespace mcmc {
 						}
 					}
 					else {
-						for (::size_t k = 0; k < K; k++) {
+						for (int k = 0; k < K; k++) {
 							gamma[node->first][k] = (1 - p_t)*gamma[node->first][k] + p_t * (alpha + scale1 * grad_gamma[node->first][k]);
 						}
 					}
@@ -452,7 +452,7 @@ namespace mcmc {
 
 				// update lamda
 				// std::cerr << std::setprecision(17) << "p_t " << p_t << " eta (" << eta[0] << "," << eta[1] << ")" << " scale " << scale << " step_count " << step_count << std::endl;
-				for (::size_t k = 0; k < K; k++) {
+				for (int k = 0; k < K; k++) {
 
 					if (step_count > 400000) {
 						double lamda_star_0 = (1 - p_t)*lamda[k][0] + p_t *(eta[0] + scale * grad_lamda[k][0]);
@@ -502,12 +502,12 @@ namespace mcmc {
 
 				// alternatively update phi_ab and phi_ba, until it converges
 				// or reach the maximum iterations.
-				for (::size_t i = 0; i < online_iterations; i++) {
+				for (int i = 0; i < online_iterations; i++) {
 					std::vector<double> phi_ab_old(phi_ab);
 					std::vector<double> phi_ba_old(phi_ba);
 
 					// first, update phi_ab
-					for (::size_t k = 0; k < (K); k++) {
+					for (int k = 0; k < (K); k++) {
 						if (y) {
 							double u = -phi_ba[k] * log_epsilon;
 							phi_ab[k] = std::exp(digamma(gamma[a][k]) + phi_ba[k] * \
@@ -520,12 +520,12 @@ namespace mcmc {
 						}
 					}
 					double sum_phi_ab = np::sum(phi_ab);
-					for (::size_t k = 0; k < phi_ab.size(); k++) {
+					for (int k = 0; k < phi_ab.size(); k++) {
 						phi_ab[k] /= sum_phi_ab;
 					}
 
 					// then update phi_ba
-					for (::size_t k = 0; k < K; k++) {
+					for (int k = 0; k < K; k++) {
 						if (y) {
 							double u = -phi_ab[k] * log_epsilon;
 							phi_ba[k] = std::exp(digamma(gamma[b][k]) + phi_ab[k] *
@@ -539,7 +539,7 @@ namespace mcmc {
 					}
 
 					double sum_phi_ba = np::sum(phi_ba);
-					for (::size_t k = 0; k < phi_ba.size(); k++) {
+					for (int k = 0; k < phi_ba.size(); k++) {
 						phi_ba[k] /= sum_phi_ba;
 					}
 
@@ -563,7 +563,7 @@ namespace mcmc {
 #if 0
 				std::ofstream f;
 				f.open('ppx_variational_sampler.txt');
-				for (::size_t i = 0; i < avg_log.size(); i++) {
+				for (int i = 0; i < avg_log.size(); i++) {
 					f << std::exp(avg_log[i]) << "\t" << timing[i] << std::endl;
 				}
 				f.close();
@@ -581,7 +581,7 @@ namespace mcmc {
 			double tao;
 
 			// control parameters for learning
-			::size_t online_iterations;
+			int online_iterations;
 			double phi_update_threshold;
 
 			double log_epsilon;

@@ -97,7 +97,7 @@ namespace mcmc {
 				return ppxs_test;
 			}
 
-			void set_max_iteration(::size_t max_iteration) {
+			void set_max_iteration(int max_iteration) {
 				this->max_iteration = max_iteration;
 			}
 
@@ -111,7 +111,7 @@ namespace mcmc {
 			}
 
 			bool is_converged() const {
-				::size_t n = ppxs_held_out.size();
+				int n = ppxs_held_out.size();
 				if (n < 2) {
 					return false;
 				}
@@ -139,8 +139,8 @@ namespace mcmc {
 			double cal_perplexity(const EdgeMap &data) {
 				double link_likelihood = 0.0;
 				double non_link_likelihood = 0.0;
-				::size_t link_count = 0;
-				::size_t non_link_count = 0;
+				int link_count = 0;
+				int non_link_count = 0;
 
 				for (EdgeMap::const_iterator edge = data.begin();
 					edge != data.end();
@@ -196,7 +196,7 @@ namespace mcmc {
 
 
 			template <typename T>
-			static void dump(const std::vector<T> &a, ::size_t n, const std::string &name = "") {
+			static void dump(const std::vector<T> &a, int n, const std::string &name = "") {
 				n = std::min(n, a.size());
 				std::cerr << name;
 				if (n != a.size()) {
@@ -222,13 +222,13 @@ namespace mcmc {
 				const double* beta) const {
 				double s = 0.0;
 				if (y) {
-					for (::size_t k = 0; k < K; k++) {
+					for (int k = 0; k < K; k++) {
 						s += pi_a[k] * pi_b[k] * beta[k];
 					}
 				}
 				else {
 					double sum = 0.0;
-					for (::size_t k = 0; k < K; k++) {
+					for (int k = 0; k < K; k++) {
 						// FIXME share common subexpressions
 						s += pi_a[k] * pi_b[k] * (1.0 - beta[k]);
 						sum += pi_a[k] * pi_b[k];
@@ -245,7 +245,7 @@ namespace mcmc {
 				double prob = 0.0;
 				double s = 0.0;
 
-				for (::size_t k = 0; k < K; k++) {
+				for (int k = 0; k < K; k++) {
 					if (!y) {
 						prob += pi_a[k] * pi_b[k] * (1 - beta[k]);
 					}
@@ -275,24 +275,24 @@ namespace mcmc {
 
 			double alpha;
 			double* eta;
-			::size_t K;
+			int K;
 			double epsilon;
-			::size_t N;
+			int N;
 
 			//std::vector<double> beta;
 			//std::vector<std::vector<double>> pi;
 			double* beta;
 			double** pi;
 
-			::size_t mini_batch_size;
+			int mini_batch_size;
 			double link_ratio;
 
-			::size_t step_count;
+			int step_count;
 
 			std::vector<double> ppxs_held_out;
 			std::vector<double> ppxs_test;
 
-			::size_t max_iteration;
+			int max_iteration;
 
 			double CONVERGENCE_THRESHOLD;
 

@@ -128,7 +128,7 @@ namespace std {
 	template<>
 	struct hash<mcmc::Edge> {
 	public:
-		::size_t operator()(const mcmc::Edge &x) const;
+		int operator()(const mcmc::Edge &x) const;
 	};
 }
 
@@ -197,8 +197,8 @@ namespace mcmc {
 }	// namespace mcmc
 
 namespace std {
-	::size_t hash<mcmc::Edge>::operator()(const mcmc::Edge &x) const {
-		::size_t h = std::hash<int>()(x.first) ^ std::hash<int>()(x.second);
+	int hash<mcmc::Edge>::operator()(const mcmc::Edge &x) const {
+		int h = std::hash<int>()(x.first) ^ std::hash<int>()(x.second);
 		return h;
 	}
 }
