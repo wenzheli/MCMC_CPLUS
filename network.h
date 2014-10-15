@@ -152,7 +152,7 @@ namespace mcmc {
 			OrderedEdgeSet *mini_batch_set = new OrderedEdgeSet();
 
 			if (flag == 0) {
-				cout<<"sample non-linked edges"<<endl;
+				//cout<<"sample non-linked edges"<<endl;
 				/* sample non-link edges */
 				// this is approximation, since the size of self.train_link_map[nodeId]
 				// greatly smaller than N.
@@ -198,7 +198,7 @@ namespace mcmc {
 
 			}
 			else {
-				cout<<"sample linked edges"<<endl;
+				//cout<<"sample linked edges"<<endl;
 				/* sample linked edges */
 				// return all linked edges
 				if (false) {

@@ -62,7 +62,7 @@ namespace mcmc {
 				// control parameters for learning
 				 //num_node_sample = static_cast< int>(std::sqrt(network.get_num_nodes()));
 				// TODO: automative update.....
-				num_node_sample = N/10;
+				num_node_sample = 30;
 
 				// model parameters and re-parameterization
 				// since the model parameter - \pi and \beta should stay in the simplex,
@@ -73,18 +73,50 @@ namespace mcmc {
 				std::cerr << "Ignore eta[] in random.gamma: use 100.0 and 0.01" << std::endl;
 				// theta = Random::random->gamma(eta[0], eta[1], K, 2);		// parameterization for \beta
 				//theta = Random::random->gamma(100.0, 0.01, K, 2);		// parameterization for \beta
-				theta = Random::random->gamma(1, 1, K, 2);
-				phi = Random::random->gamma(1, 1, N, K);					// parameterization for \pi
+				
+				theta = Random::random->gammaArray(eta[0], eta[1], K, 2);		// parameterization for \beta - K by 2
+				phi = Random::random->gammaArray(1, 1, N, K);					// parameterization for \pi   - N by K
+
+				//theta = Random::random->gamma(1, 1, K, 2);
+				//phi = Random::random->gamma(1, 1, N, K);					// parameterization for \pi
 
 				// FIXME RFHH -- code sharing with variational_inf*::update_pi_beta()
 				// temp = self.__theta/np.sum(self.__theta,1)[:,np.newaxis]
 				// self._beta = temp[:,1]
-				std::vector<std::vector<double> > temp(theta.size(), std::vector<double>(theta[0].size()));
-				np::row_normalize(&temp, theta);
-				std::transform(temp.begin(), temp.end(), beta.begin(), np::SelectColumn<double>(1));
+				update_pi_from_phi();
+				update_beta_from_theta();
+
+				//std::vector<std::vector<double> > temp(theta.size(), std::vector<double>(theta[0].size()));
+				//np::row_normalize(&temp, theta);
+				//std::transform(temp.begin(), temp.end(), beta.begin(), np::SelectColumn<double>(1));
 				// self._pi = self.__phi/np.sum(self.__phi,1)[:,np.newaxis]
-				pi.resize(phi.size(), std::vector<double>(phi[0].size()));
-				np::row_normalize(&pi, phi);
+				//pi.resize(phi.size(), std::vector<double>(phi[0].size()));
+				//np::row_normalize(&pi, phi);
+			}
+
+			void update_pi_from_phi(){
+				for (int i = 0; i < N; i++){
+					double sum = 0;
+					for (int k = 0; k < K; k++){
+						sum += phi[i][k];
+					}
+					for (int k = 0; k < K; k++){
+						pi[i][k] = phi[i][k] / sum;
+						//cout<<pi[i][k]<< " ";
+					}
+					//cout<<endl;
+				}
+			}
+
+			void update_beta_from_theta(){
+				for (int k = 0; k < K; k++){
+					double sum = 0;
+					for (int t = 0; t < 2; t++){
+						sum += theta[k][t];
+					}
+					// beta[k] = theta[k][1]/(theta[k][0] + theta[k][1])
+					beta[k] = theta[k][1] / sum;
+				}
 			}
 
 			virtual ~MCMCSamplerStochastic() {
@@ -96,7 +128,7 @@ namespace mcmc {
 				while (step_count < max_iteration && !is_converged()) {
 					auto l1 = std::chrono::system_clock::now();
 
-					if (step_count % 10 == 0){
+					if (step_count % 100 == 0){
 
 						double ppx_score = cal_perplexity_held_out();
 						std::cout << std::fixed << std::setprecision(12) << "step count: "<<step_count<<"perplexity for hold out set: " << ppx_score << std::endl;
@@ -125,7 +157,8 @@ namespace mcmc {
 						OrderedVertexSet neighbors = sample_neighbor_nodes(num_node_sample, *node);
 						update_phi(*node, neighbors);
 					}
-					np::row_normalize(&pi, phi);	// update pi from phi. 
+					//np::row_normalize(&pi, phi);	// update pi from phi. 
+					update_pi_from_phi();
 					// update beta
 					update_beta(mini_batch, scale);
 
@@ -140,11 +173,24 @@ namespace mcmc {
 
 		protected:
 			void update_beta(const OrderedEdgeSet &mini_batch, double scale){
-				std::vector<std::vector<double> > grads(K, std::vector<double>(2, 0.0));
+				
+				double** grads;
+				grads = new double*[K];
+				for (int k = 0; k < K; k++){
+					grads[k] = new double[2]();
+				}
+				//std::vector<std::vector<double> > grads(K, std::vector<double>(2, 0.0));
 				//theta_sum = np.sum(self.__theta,1)
 				// TODO....
-				std::vector<double> theta_sum(theta.size());
-				std::transform(theta.begin(), theta.end(), theta_sum.begin(), np::sum<double>);
+				//std::vector<double> theta_sum(theta.size());
+				//std::transform(theta.begin(), theta.end(), theta_sum.begin(), np::sum<double>);
+				double* theta_sum = new double[K];
+				for (int k = 0; k<K; k++){
+					theta_sum[k] = 0;
+				}
+				for (int k = 0; k < K; k++){
+					theta_sum[k] = theta[k][0] + theta[k][1];
+				}
 
 				// update gamma, only update node in the grad
 				double eps_t = eps_t = a * std::pow(1 + step_count / b, -c);
@@ -157,7 +203,8 @@ namespace mcmc {
 					int i = edge->first;
 					int j = edge->second;
 
-					std::vector<double> probs(K);
+					double* probs = new double[K]();
+					//std::vector<double> probs(K);
 					double pi_sum = 0.0;
 					for (int k = 0; k < K; k++){
 						pi_sum += pi[i][k] * pi[j][k];
@@ -165,40 +212,69 @@ namespace mcmc {
 					}
 
 					double prob_0 = std::pow(epsilon, y) * std::pow(1 - epsilon, 1 - y) * (1 - pi_sum);
-					double prob_sum = np::sum(probs) + prob_0;
+					double prob_sum = getSum(probs,K) + prob_0;
 					for (int k = 0; k < K; k++){
 						grads[k][0] += (probs[k] / prob_sum) * (std::abs(1 - y) / theta[k][0] - 1 / theta_sum[k]);
 						grads[k][1] += (probs[k] / prob_sum) * (std::abs(-y) / theta[k][1] - 1 / theta_sum[k]);
 					}
+
+					delete[] probs;
 				}
 
 				// update theta
-				std::vector<std::vector<double> > noise = Random::random->randn(K, 2);
-				std::vector<std::vector<double> > theta_star(theta);
+				double** noise;
+				noise = new double*[K];
+				for (int k = 0; k < K; k++){
+					noise[k] = Random::random->randnArray(2);
+				}
+				//std::vector<std::vector<double> > noise = Random::random->randn(K, 2);
+				//std::vector<std::vector<double> > theta_star(theta);
 				for (int k = 0; k < K; k++) {
 					for (int i = 0; i < 2; i++) {
 
 						double f = std::sqrt(eps_t * theta[k][i]);
-						theta_star[k][i] = std::abs(theta[k][i] + eps_t / 2 * (eta[i] - theta[k][i] + \
+						theta[k][i] = std::abs(theta[k][i] + eps_t / 2 * (eta[i] - theta[k][i] + \
 							scale * grads[k][i]) +
 							f * noise[k][i]);
 					}
 				}
-				theta = theta_star;
+				//theta = theta_star;
+				for (int k = 0; k < K; k++){
+					delete[] noise[k];
+				}
+				delete[] noise;
 
-				std::vector<std::vector<double> > temp(theta.size(), std::vector<double>(theta[0].size()));
-				np::row_normalize(&temp, theta);
-				std::transform(temp.begin(), temp.end(), beta.begin(), np::SelectColumn<double>(1));
+				delete[] theta_sum;
+
+				for (int k = 0; k < K; k++){
+					delete[] grads[k];
+				}
+				delete[] grads;
+				//theta = theta_star;
+				update_beta_from_theta();
+				//std::vector<std::vector<double> > temp(theta.size(), std::vector<double>(theta[0].size()));
+				//np::row_normalize(&temp, theta);
+				//std::transform(temp.begin(), temp.end(), beta.begin(), np::SelectColumn<double>(1));
 			}
 			
 
+			double getSum(double a[], int n) const{
+				double s = 0.0;
+				for (int i = 0; i < n; i++){
+					s += a[i];
+				}
+				return s;
+			}
+
+
 			void update_phi(int i, const OrderedVertexSet &neighbors){
 				double eps_t = a * std::pow(1 + step_count / b, -c);	// step size
-				double phi_i_sum = np::sum(phi[i]);
-				std::vector<double> grads(K);							// gradient for K classes
+				double phi_i_sum = getSum(phi[i], K);
+				//std::vector<double> grads(K);							// gradient for K classes
+				double* grads = new double[K]();
 				std::vector<double> phi_star(K);                        // temp vars
-				std::vector<double> noise = Random::random->randn(K);	// random gaussian noise.
-
+				//std::vector<double> noise = Random::random->randn(K);	// random gaussian noise.
+				double* noise = Random::random->randnArray(K);
 				for (auto neighbor = neighbors.begin();
 					neighbor != neighbors.end();
 					neighbor++) {
@@ -213,24 +289,28 @@ namespace mcmc {
 						y_ab = 1;
 					}
 
-					std::vector<double> probs(K);
+					double* probs = new double[K]();
+					//std::vector<double> probs(K);
 					for (int k = 0; k < K; k++){
 						probs[k] = std::pow(beta[k], y_ab) * std::pow(1 - beta[k], 1 - y_ab) * pi[i][k] * pi[*neighbor][k];
 						probs[k] += std::pow(epsilon, y_ab) * std::pow(1 - epsilon, 1 - y_ab) * pi[i][k] * (1 - pi[*neighbor][k]);
 					}
 
-					double prob_sum = np::sum(probs);
+					double prob_sum = getSum(probs, K);
 					for (int k = 0; k < K; k++){
 						grads[k] += (probs[k] / prob_sum) / phi[i][k] - 1.0 / phi_i_sum;
 					}
+					delete[] probs;
 				}
 				// update phi for node i
 				for (int k = 0; k < K; k++){
-					phi_star[k] = std::abs(phi[i][k] + eps_t / 2 * (alpha - phi[i][k] + (N*1.0 / num_node_sample) *grads[k]) + std::pow(eps_t, 0.5)*std::pow(phi[i][k], 0.5) *noise[k]);
+					phi[i][k] = std::abs(phi[i][k] + eps_t / 2 * (alpha - phi[i][k] + (N*1.0 / num_node_sample) *grads[k]) + std::pow(eps_t, 0.5)*std::pow(phi[i][k], 0.5) *noise[k]);
 				}
 
+				delete[] noise;
+				delete[] grads;
 				// assign back to phi. 
-				phi[i] = phi_star;
+				//phi[i] = phi_star;
 			}
 
 			// TODO FIXME make VertexSet an out parameter
