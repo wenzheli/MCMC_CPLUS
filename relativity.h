@@ -20,10 +20,10 @@ namespace mcmc {
 		class Relativity : public DataSet {
 
 		public:
-			const int MAX_NODES = 2000;
+			const int MAX_NODES = 40000;
 
 		public:
-			Relativity(const std::string &filename) : DataSet(filename == "" ? "CA-GrQc.txt" : filename) {
+			Relativity(const std::string &filename) : DataSet(filename == "" ? "CA-AstroPh.txt" : filename) {
 			}
 
 			virtual ~Relativity() {
@@ -100,7 +100,7 @@ namespace mcmc {
 					E->insert(Edge(std::min(node1, node2), std::max(node1, node2)));
 				}
 
-				N = MAX_NODES;
+				//N = MAX_NODES;
 				
 				cout<< "# of edges: "<<E->size()<<endl;
 				cout<< "# of nodes: "<<N<<endl;

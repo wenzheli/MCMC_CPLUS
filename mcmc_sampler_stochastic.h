@@ -62,7 +62,7 @@ namespace mcmc {
 				// control parameters for learning
 				 //num_node_sample = static_cast< int>(std::sqrt(network.get_num_nodes()));
 				// TODO: automative update.....
-				num_node_sample = 30;
+				num_node_sample = N/100;
 
 				// model parameters and re-parameterization
 				// since the model parameter - \pi and \beta should stay in the simplex,
@@ -128,7 +128,7 @@ namespace mcmc {
 				while (step_count < max_iteration && !is_converged()) {
 					auto l1 = std::chrono::system_clock::now();
 
-					if (step_count % 100 == 0){
+					if (step_count % 100 == 1){
 
 						double ppx_score = cal_perplexity_held_out();
 						std::cout << std::fixed << std::setprecision(12) << "step count: "<<step_count<<"perplexity for hold out set: " << ppx_score << std::endl;
@@ -193,7 +193,8 @@ namespace mcmc {
 				}
 
 				// update gamma, only update node in the grad
-				double eps_t = eps_t = a * std::pow(1 + step_count / b, -c);
+				//double eps_t = eps_t = a * std::pow(1 + step_count / b, -c);
+				double eps_t = std::pow(1024+step_count, -0.5);
 				for (auto edge = mini_batch.begin(); edge != mini_batch.end(); edge++){
 					
 					int y = 0;
@@ -268,7 +269,8 @@ namespace mcmc {
 
 
 			void update_phi(int i, const OrderedVertexSet &neighbors){
-				double eps_t = a * std::pow(1 + step_count / b, -c);	// step size
+				//double eps_t = a * std::pow(1 + step_count / b, -c);	// step size
+				double eps_t = std::pow(1024+step_count, -0.5);
 				double phi_i_sum = getSum(phi[i], K);
 				//std::vector<double> grads(K);							// gradient for K classes
 				double* grads = new double[K]();

@@ -92,7 +92,7 @@ namespace mcmc {
 		EdgeSample sample_mini_batch(int mini_batch_size, strategy::strategy strategy) const {
 			switch (strategy) {
 			case strategy::STRATIFIED_RANDOM_NODE:
-				return stratified_random_node_sampling(10);
+				return stratified_random_node_sampling(100);
 			default:
 				throw MCMCException("Invalid sampling strategy");
 			}
