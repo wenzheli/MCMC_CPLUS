@@ -2,13 +2,25 @@
 #define GIBBS_SAMPLER_H
 
 
+#include <cassert>
+#include <cmath>
+
+#include <utility>
+#include <numeric>
+#include <algorithm>	// min, max
+#include <chrono>
+
+#include "myrandom.h"
 #include "learner.h"
 #include "myrandom.h"
 
 namespace mcmc {
+	  namespace learning{
 	
-class GibbsSampler: public Learner{
-public:
+class GibbsSampler : public Learner {
+
+
+public:	
 	GibbsSampler(const Options &args, const Network &graph)
 		: Learner(args, graph){
 
@@ -102,7 +114,7 @@ public:
 					}
 				}
 
-				int* results = GibbsSampler(i,j);
+				int* results = sampler(i,j,y);
 
 				// update
 				z[i][j] = results[0];
@@ -122,8 +134,8 @@ public:
 		}
 	}
 
-	double getSum(double a[], int n) const{
-		double s = 0.0;
+	int getSum(int a[], int n) const{
+		int s = 0.0;
 		for (int i = 0; i < n; i++){
 			s += a[i];
 		}
@@ -143,7 +155,7 @@ public:
 		}
 	}
 
-	int* GibbsSampler(int i, int j){
+	int* sampler(int i, int j, int y){
 		double** p;
 		p = new double*[K];
 		for (int i = 0; i < K; i++){
@@ -164,7 +176,7 @@ public:
 					if (y == 1){
 						term = (num_kk[k1][0] + eta[0])/(num_kk[k1][0] + num_kk[k1][1] + eta[0] + eta[1]);
 					}else{
-						term = (num_kk[k1][1] + eta[1])/(num_kk[k1][0] + num_kk[k1][1]) + eta[0] + eta[1]);
+						term = (num_kk[k1][1] + eta[1])/(num_kk[k1][0] + num_kk[k1][1] + eta[0] + eta[1]);
 					}
 					p[k1][k2] = (alpha + num_n_k[i][k1]) * (alpha + num_n_k[j][k2]) * term;
 				}
@@ -187,7 +199,7 @@ public:
 		}
 
 		double u = Random::random->random() * temp[n-1];
-		int id = 0;
+		int idx = 0;
 		for (int i = 0; i < n; i++){
 			if (u <= temp[i]){
 				idx = i;
@@ -214,6 +226,7 @@ public:
 	int** num_kk;
 	int** num_n_k;
 };
+}
 } // mcmc namespace
 
 
