@@ -7,6 +7,8 @@
 #include <numeric>
 #include <algorithm>	// min, max
 #include <chrono>
+#include <fstream>
+#include <iostream>
 
 #include "np.h"
 #include "myrandom.h"
@@ -124,16 +126,41 @@ namespace mcmc {
 
 			virtual void run() {
 				/** run mini-batch based MCMC sampler, based on the sungjin's note */
-				
+				clock_t t1, t2;
+				std::vector<double> timings;
+				t1 = clock();
 				while (step_count < max_iteration && !is_converged()) {
-					auto l1 = std::chrono::system_clock::now();
-
-					if (step_count % 100 == 1){
+					
+					if (step_count % 10 == 1){
 
 						double ppx_score = cal_perplexity_held_out();
 						std::cout << std::fixed << std::setprecision(12) << "step count: "<<step_count<<"perplexity for hold out set: " << ppx_score << std::endl;
 						ppxs_held_out.push_back(ppx_score);
+
+
+
+						t2 = clock();
+						float diff = ((float)t2 - (float)t1);
+						float seconds = diff / CLOCKS_PER_SEC;
+						timings.push_back(seconds);
 					}
+
+
+					// write into file 
+					if (step_count% 2000 == 1){
+						ofstream myfile;
+  						myfile.open ("mcmc_stochastic_30_AstroPh.txt");
+  						int size = ppxs_held_out.size();
+  						for (int i = 0; i < size; i++){
+  							
+  							int iteration = i * 10 + 1;
+  							myfile <<iteration<<"    "<<timings[i]<<"    "<<ppxs_held_out[i]<<"\n";
+  						}
+  						
+  						myfile.close();
+					}
+
+
 					//print "step: " + str(self._step_count)
 					/**
 					pr = cProfile.Profile()
@@ -165,7 +192,7 @@ namespace mcmc {
 					delete edgeSample.first;
 
 					step_count++;
-					auto l2 = std::chrono::system_clock::now();
+					//auto l2 = std::chrono::system_clock::now();
 					//std::cout << "LOOP  = " << (l2 - l1).count() << std::endl;
 				}
 			}

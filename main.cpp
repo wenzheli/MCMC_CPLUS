@@ -24,7 +24,7 @@ int main(int argc, char *argv[]) {
 	args.eta1 = 1;
 	args.K = 30;
 	args.mini_batch_size = 50;
-	args.max_iteration = 100000;
+	args.max_iteration = 500000;
 	args.epsilon = 0.0000001;
 	args.a = 0.01;
 	args.b = 1024;
