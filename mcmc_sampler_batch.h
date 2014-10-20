@@ -272,13 +272,22 @@ namespace mcmc {
 			virtual void run() {
 				// pr = cProfile.Profile()
 				// pr.enable()
+				clock_t t1, t2;
+				std::vector<double> timings;
+				t1 = clock();
+
 				while (step_count < max_iteration && !is_converged()) {
-					auto l1 = std::chrono::system_clock::now();
+					
 					//print "step: " + str(self._step_count)
 					cout<<"calling hold out...";
 					double ppx_score = cal_perplexity_held_out();
 					std::cout << std::fixed << std::setprecision(12) << "perplexity for hold out set: " << ppx_score << std::endl;
 					ppxs_held_out.push_back(ppx_score);
+
+					t2 = clock();
+					float diff = ((float)t2 - (float)t1);
+					float seconds = diff / CLOCKS_PER_SEC;
+					timings.push_back(seconds);
 
 					/*  wenzhe commented this out...
 					std::vector<std::vector<double> > phi_star(pi);
@@ -307,9 +316,23 @@ namespace mcmc {
 
 					update_beta();
 
+					// write into file 
+					if (step_count% 1000 == 1){
+						ofstream myfile;
+  						myfile.open ("mcmc_batch_20_us_air.txt");
+  						int size = ppxs_held_out.size();
+  						for (int i = 0; i < size; i++){
+  							int iteration = i * 1 + 1;
+  							myfile <<iteration<<"    "<<timings[i]<<"    "<<ppxs_held_out[i]<<"\n";
+  						}
+  						
+  						myfile.close();
+					}
+
+
 					step_count++;
-					auto l2 = std::chrono::system_clock::now();
-					std::cout << "LOOP  = " << (l2 - l1).count() << std::endl;
+					
+
 				}
 
 #if 0

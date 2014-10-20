@@ -73,16 +73,41 @@ public:
 	}
 
 	void run(){
+        clock_t t1, t2;
+        std::vector<double> timings;
+        t1 = clock();
 		while (step_count < max_iteration && !is_converged()) {
-			auto l1 = std::chrono::system_clock::now();
+			
 			//print "step: " + str(self._step_count)
 			cout<<"calling hold out...";
 			double ppx_score = cal_perplexity_held_out();
 			std::cout << std::fixed << std::setprecision(12) << "perplexity for hold out set: " << ppx_score << std::endl;
 			ppxs_held_out.push_back(ppx_score);
 
+            t2 = clock();
+            float diff = ((float)t2 - (float)t1);
+            float seconds = diff / CLOCKS_PER_SEC;
+            timings.push_back(seconds);
+
 			process();
-			update_pi_beta();				
+			update_pi_beta();
+
+            // write into file 
+            if (step_count% 1000 == 1){
+                ofstream myfile;
+                myfile.open ("gibbs_20_us_air.txt");
+                int size = ppxs_held_out.size();
+                for (int i = 0; i < size; i++){
+                    int iteration = i * 1 + 1;
+                    myfile <<iteration<<"    "<<timings[i]<<"    "<<ppxs_held_out[i]<<"\n";
+                }
+                        
+                myfile.close();
+            }
+
+
+
+            step_count++;				
 		}
 	}
 
@@ -119,6 +144,8 @@ public:
 				// update
 				z[i][j] = results[0];
 				z[j][i] = results[1];
+
+                delete[] results;
 
 				num_n_k[i][z[i][j]] += 1;
 				num_n_k[j][z[j][i]] += 1;
