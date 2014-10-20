@@ -64,7 +64,7 @@ namespace mcmc {
 				// control parameters for learning
 				 //num_node_sample = static_cast< int>(std::sqrt(network.get_num_nodes()));
 				// TODO: automative update.....
-				num_node_sample = N/100;
+				num_node_sample = N/150;
 
 				// model parameters and re-parameterization
 				// since the model parameter - \pi and \beta should stay in the simplex,
@@ -125,6 +125,7 @@ namespace mcmc {
 			}
 
 			virtual void run() {
+
 				/** run mini-batch based MCMC sampler, based on the sungjin's note */
 				clock_t t1, t2;
 				std::vector<double> timings;
@@ -149,7 +150,8 @@ namespace mcmc {
 					// write into file 
 					if (step_count% 2000 == 1){
 						ofstream myfile;
-  						myfile.open ("mcmc_stochastic_30_AstroPh.txt");
+						std::string file_name = "mcmc_stochastic_" + std::to_string (K) + "_relativity.txt";
+  						myfile.open (file_name);
   						int size = ppxs_held_out.size();
   						for (int i = 0; i < size; i++){
   							
