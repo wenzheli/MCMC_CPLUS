@@ -64,7 +64,7 @@ namespace mcmc {
 				// control parameters for learning
 				 //num_node_sample = static_cast< int>(std::sqrt(network.get_num_nodes()));
 				// TODO: automative update.....
-				num_node_sample = N/150;
+				num_node_sample = N/30;
 
 				// model parameters and re-parameterization
 				// since the model parameter - \pi and \beta should stay in the simplex,
@@ -130,9 +130,12 @@ namespace mcmc {
 				clock_t t1, t2;
 				std::vector<double> timings;
 				t1 = clock();
+				int interval = 100;
 				while (step_count < max_iteration && !is_converged()) {
-					
-					if (step_count % 10 == 1){
+					//if (step_count > 200000){
+						//interval = 2;
+					//}
+					if (step_count % interval == 1){
 
 						double ppx_score = cal_perplexity_held_out();
 						std::cout << std::fixed << std::setprecision(12) << "step count: "<<step_count<<"perplexity for hold out set: " << ppx_score << std::endl;
@@ -144,19 +147,20 @@ namespace mcmc {
 						float diff = ((float)t2 - (float)t1);
 						float seconds = diff / CLOCKS_PER_SEC;
 						timings.push_back(seconds);
+						iterations.push_back(step_count);
 					}
 
 
 					// write into file 
 					if (step_count% 2000 == 1){
 						ofstream myfile;
-						std::string file_name = "mcmc_stochastic_" + std::to_string (K) + "_relativity.txt";
+						std::string file_name = "mcmc_stochastic_" + std::to_string (K) + "_us_air.txt";
   						myfile.open (file_name);
   						int size = ppxs_held_out.size();
   						for (int i = 0; i < size; i++){
   							
-  							int iteration = i * 10 + 1;
-  							myfile <<iteration<<"    "<<timings[i]<<"    "<<ppxs_held_out[i]<<"\n";
+  							//int iteration = i * 100 + 1;
+  							myfile <<iterations[i]<<"    "<<timings[i]<<"    "<<ppxs_held_out[i]<<"\n";
   						}
   						
   						myfile.close();
@@ -222,8 +226,8 @@ namespace mcmc {
 				}
 
 				// update gamma, only update node in the grad
-				//double eps_t = eps_t = a * std::pow(1 + step_count / b, -c);
-				double eps_t = std::pow(1024+step_count, -0.5);
+				double eps_t = eps_t = a * std::pow(1 + step_count / b, -c);
+				//double eps_t = std::pow(1024+step_count, -0.5);
 				for (auto edge = mini_batch.begin(); edge != mini_batch.end(); edge++){
 					
 					int y = 0;
@@ -256,6 +260,7 @@ namespace mcmc {
 				noise = new double*[K];
 				for (int k = 0; k < K; k++){
 					noise[k] = Random::random->randnArray(2);
+					//noise[k] = new double[2]();
 				}
 				//std::vector<std::vector<double> > noise = Random::random->randn(K, 2);
 				//std::vector<std::vector<double> > theta_star(theta);
@@ -298,14 +303,15 @@ namespace mcmc {
 
 
 			void update_phi(int i, const OrderedVertexSet &neighbors){
-				//double eps_t = a * std::pow(1 + step_count / b, -c);	// step size
-				double eps_t = std::pow(1024+step_count, -0.5);
+				double eps_t = a * std::pow(1 + step_count / b, -c);	// step size
+				//double eps_t = std::pow(1024+step_count, -0.5);
 				double phi_i_sum = getSum(phi[i], K);
 				//std::vector<double> grads(K);							// gradient for K classes
 				double* grads = new double[K]();
 				std::vector<double> phi_star(K);                        // temp vars
 				//std::vector<double> noise = Random::random->randn(K);	// random gaussian noise.
 				double* noise = Random::random->randnArray(K);
+				//double* noise = new double[K]();
 				for (auto neighbor = neighbors.begin();
 					neighbor != neighbors.end();
 					neighbor++) {

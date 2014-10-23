@@ -27,6 +27,7 @@ namespace mcmc {
 				eta = new double[2];
 				eta[0] = args.eta0;
 				eta[1] = args.eta1;
+				average_count = 1;
 
 				// parameters related to control model
 				K = args.K;
@@ -70,6 +71,8 @@ namespace mcmc {
 				CONVERGENCE_THRESHOLD = 0.000000000001;
 
 				stepsize_switch = false;
+
+				ppx_for_heldout = new double[network.held_out_size]();
 			}
 
 			virtual ~Learner() {
@@ -139,24 +142,35 @@ namespace mcmc {
 			double cal_perplexity(const EdgeMap &data) {
 				double link_likelihood = 0.0;
 				double non_link_likelihood = 0.0;
+			
+			
 				int link_count = 0;
 				int non_link_count = 0;
-
+				cout<<ppx_for_heldout[0]<<endl;
+				int idx = 0;
 				for (EdgeMap::const_iterator edge = data.begin();
 					edge != data.end();
 					edge++) {
+					
 					const Edge &e = edge->first;
 					double edge_likelihood = cal_edge_likelihood(pi[e.first], pi[e.second],
 						edge->second, beta);
+					//cout<<edge_likelihood;
 					//cout<<"edge likelihood"<<edge_likelihood<<endl;
 
 					if (std::isnan(edge_likelihood)){
 						cout<<"potential bug";
 					}
+
+					//cout<<"AVERAGE COUNT: " <<average_count;
+					ppx_for_heldout[idx] = (ppx_for_heldout[idx] * (average_count-1) + edge_likelihood)/(average_count);
+
+					//cout<<ppx_for_heldout[idx];
 					// std::cerr << std::fixed << std::setprecision(12) << e << " in? " << (e.in(network.get_linked_edges()) ? "True" : "False") << " -> " << edge_likelihood << std::endl;
 					if (e.in(network.get_linked_edges())) {
 						link_count++;
-						link_likelihood += edge_likelihood;
+						link_likelihood += std::log(ppx_for_heldout[idx]);
+						//link_likelihood += edge_likelihood;
 
 						if (std::isnan(link_likelihood)){
 							cout<<"potential bug";
@@ -165,11 +179,13 @@ namespace mcmc {
 					else {
 						assert(!present(network.get_linked_edges(), e));
 						non_link_count++;
-						non_link_likelihood += edge_likelihood;
+						//non_link_likelihood += edge_likelihood;
+						non_link_likelihood += std::log(ppx_for_heldout[idx]);
 						if (std::isnan(non_link_likelihood)){
 							cout<<"potential bug";
 						}
 					}
+					idx++;
 				}
 				// std::cerr << std::setprecision(12) << "ratio " << link_ratio << " count: link " << link_count << " " << link_likelihood << " non-link " << non_link_count << " " << non_link_likelihood << std::endl;
 
@@ -191,6 +207,10 @@ namespace mcmc {
 				}
 
 				// return std::exp(-avg_likelihood);
+
+				//if (step_count > 1000)
+				average_count = average_count + 1;
+				cout<<"average_count is: "<<average_count;
 				return (-avg_likelihood);
 			}
 
@@ -240,7 +260,7 @@ namespace mcmc {
 					s = 1.0e-30;
 				}
 
-				return std::log(s);
+				return s;
 #if 0
 				double prob = 0.0;
 				double s = 0.0;
@@ -291,12 +311,15 @@ namespace mcmc {
 
 			std::vector<double> ppxs_held_out;
 			std::vector<double> ppxs_test;
+			std::vector<double> iterations;
+			double* ppx_for_heldout;
 
 			int max_iteration;
 
 			double CONVERGENCE_THRESHOLD;
 
 			bool stepsize_switch;
+			int average_count;
 		};
 
 

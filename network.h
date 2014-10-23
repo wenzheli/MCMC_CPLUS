@@ -92,7 +92,7 @@ namespace mcmc {
 		EdgeSample sample_mini_batch(int mini_batch_size, strategy::strategy strategy) const {
 			switch (strategy) {
 			case strategy::STRATIFIED_RANDOM_NODE:
-				return stratified_random_node_sampling(100);
+				return stratified_random_node_sampling(30);
 			default:
 				throw MCMCException("Invalid sampling strategy");
 			}
@@ -378,13 +378,14 @@ namespace mcmc {
 			}
 		}
 
-
+	public:
+		int	held_out_size;
 	protected:
 		int			N;					// number of nodes in the graph
 		const EdgeSet *linked_edges;	// all pair of linked edges.
 		int	num_total_edges;	// number of total edges.
 		float		held_out_ratio;		// percentage of held-out data size
-		int	held_out_size;
+		
 
 		// The map stores all the neighboring nodes for each node, within the training
 		// set. The purpose of keeping this object is to make the stratified sampling

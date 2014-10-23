@@ -281,6 +281,7 @@ namespace mcmc {
 					//print "step: " + str(self._step_count)
 					cout<<"calling hold out...";
 					double ppx_score = cal_perplexity_held_out();
+
 					std::cout << std::fixed << std::setprecision(12) << "perplexity for hold out set: " << ppx_score << std::endl;
 					ppxs_held_out.push_back(ppx_score);
 
@@ -330,7 +331,7 @@ namespace mcmc {
 					}
 
 
-					step_count++;
+					step_count = step_count + 1;
 					
 
 				}
