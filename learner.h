@@ -105,7 +105,7 @@ namespace mcmc {
 			}
 
 			double cal_perplexity_held_out() {
-				cout<<"calling cal_perplexity_held_out";
+				//cout<<"calling cal_perplexity_held_out";
 				return cal_perplexity(network.get_held_out_set());
 			}
 
@@ -146,7 +146,7 @@ namespace mcmc {
 			
 				int link_count = 0;
 				int non_link_count = 0;
-				cout<<ppx_for_heldout[0]<<endl;
+				//cout<<ppx_for_heldout[0]<<endl;
 				int idx = 0;
 				for (EdgeMap::const_iterator edge = data.begin();
 					edge != data.end();
@@ -208,8 +208,8 @@ namespace mcmc {
 
 				// return std::exp(-avg_likelihood);
 
-				//if (step_count > 1000)
-				average_count = average_count + 1;
+				//if (step_count > 1000000)
+					average_count = average_count + 1;
 				cout<<"average_count is: "<<average_count;
 				return (-avg_likelihood);
 			}

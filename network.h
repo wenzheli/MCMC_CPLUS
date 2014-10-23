@@ -60,6 +60,7 @@ namespace mcmc {
 			// randomly sample hold-out and test sets.
 			init_held_out_set();
 			init_test_set();
+			num_pieces = 50;  // by default
 		}
 
 		virtual ~Network() {
@@ -92,7 +93,7 @@ namespace mcmc {
 		EdgeSample sample_mini_batch(int mini_batch_size, strategy::strategy strategy) const {
 			switch (strategy) {
 			case strategy::STRATIFIED_RANDOM_NODE:
-				return stratified_random_node_sampling(30);
+				return stratified_random_node_sampling(num_pieces);
 			default:
 				throw MCMCException("Invalid sampling strategy");
 			}
@@ -122,6 +123,7 @@ namespace mcmc {
 			return test_map;
 		}
 
+public:
 		void set_num_pieces(int num_pieces) {
 			this->num_pieces = num_pieces;
 		}

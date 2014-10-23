@@ -64,7 +64,7 @@ namespace mcmc {
 				// control parameters for learning
 				 //num_node_sample = static_cast< int>(std::sqrt(network.get_num_nodes()));
 				// TODO: automative update.....
-				num_node_sample = N/30;
+				num_node_sample = N/50;
 
 				// model parameters and re-parameterization
 				// since the model parameter - \pi and \beta should stay in the simplex,
@@ -95,6 +95,52 @@ namespace mcmc {
 				//pi.resize(phi.size(), std::vector<double>(phi[0].size()));
 				//np::row_normalize(&pi, phi);
 			}
+
+
+			MCMCSamplerStochastic(const Options &args, const Network &graph, double** theta_t, double** phi_t)
+				: Learner(args, graph) {
+
+				// step size parameters.
+				this->a = args.a;
+				this->b = args.b;
+				this->c = args.c;
+
+				// control pamcrameters for learning
+				 //num_node_sample = static_cast< int>(std::sqrt(network.get_num_nodes()));
+				// TODO: automative update.....
+				num_node_sample = N/50;
+
+				// model parameters and re-parameterization
+				// since the model parameter - \pi and \beta should stay in the simplex,
+				// we need to restrict the sum of probability equals to 1.  The way we
+				// restrict this is using re-reparameterization techniques, where we
+				// introduce another set of variables, and update them first followed by
+				// updating \pi and \beta.
+				std::cerr << "Ignore eta[] in random.gamma: use 100.0 and 0.01" << std::endl;
+				// theta = Random::random->gamma(eta[0], eta[1], K, 2);		// parameterization for \beta
+				//theta = Random::random->gamma(100.0, 0.01, K, 2);		// parameterization for \beta
+				theta = theta_t;
+				phi = phi_t;
+				//theta = Random::random->gammaArray(eta[0], eta[1], K, 2);		// parameterization for \beta - K by 2
+				//phi = Random::random->gammaArray(1, 1, N, K);					// parameterization for \pi   - N by K
+
+				//theta = Random::random->gamma(1, 1, K, 2);
+				//phi = Random::random->gamma(1, 1, N, K);					// parameterization for \pi
+
+				// FIXME RFHH -- code sharing with variational_inf*::update_pi_beta()
+				// temp = self.__theta/np.sum(self.__theta,1)[:,np.newaxis]
+				// self._beta = temp[:,1]
+				update_pi_from_phi();
+				update_beta_from_theta();
+
+				//std::vector<std::vector<double> > temp(theta.size(), std::vector<double>(theta[0].size()));
+				//np::row_normalize(&temp, theta);
+				//std::transform(temp.begin(), temp.end(), beta.begin(), np::SelectColumn<double>(1));
+				// self._pi = self.__phi/np.sum(self.__phi,1)[:,np.newaxis]
+				//pi.resize(phi.size(), std::vector<double>(phi[0].size()));
+				//np::row_normalize(&pi, phi);
+			}
+
 
 			void update_pi_from_phi(){
 				for (int i = 0; i < N; i++){
@@ -130,7 +176,7 @@ namespace mcmc {
 				clock_t t1, t2;
 				std::vector<double> timings;
 				t1 = clock();
-				int interval = 100;
+				int interval = 50;
 				while (step_count < max_iteration && !is_converged()) {
 					//if (step_count > 200000){
 						//interval = 2;
@@ -154,7 +200,7 @@ namespace mcmc {
 					// write into file 
 					if (step_count% 2000 == 1){
 						ofstream myfile;
-						std::string file_name = "mcmc_stochastic_" + std::to_string (K) + "_us_air.txt";
+						std::string file_name = "mcmc_stochastic_" + std::to_string (K) + "_num_nodes_" + std::to_string(num_node_sample) + "_us_air.txt";
   						myfile.open (file_name);
   						int size = ppxs_held_out.size();
   						for (int i = 0; i < size; i++){
@@ -475,9 +521,43 @@ namespace mcmc {
 				}
 
 #endif 
-
+public:
 		void setNumNodeSample(int numSample){
 			num_node_sample = numSample;
+		}
+
+	public:
+		double** getTheta(){
+			// create new copy 
+			double** result;
+			result = new double*[K];
+			for (int i = 0; i < K; i++){
+				result[i] = new double[2]();
+			}
+			for (int i = 0; i < K; i++){
+				for (int k=0;k<2;k++){
+					result[i][k] = theta[i][k];
+				}
+			}
+
+			return result;
+
+		}
+
+		double** getPhi(){
+			// create new copy 
+			double** result;
+			result = new double*[N];
+			for (int i = 0; i < N; i++){
+				result[i] = new double[K]();
+			}
+			for (int i = 0; i < N; i++){
+				for (int k=0;k<K;k++){
+					result[i][k] = pi[i][k];
+				}
+			}
+
+			result;
 		}
 
 		protected:

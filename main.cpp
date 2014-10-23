@@ -28,9 +28,9 @@ int main(int argc, char *argv[]) {
 	args.alpha = 1;
 	args.eta0 = 1;                                                                                         
 	args.eta1 = 1;
-	args.K = 10;
+	args.K = 30;
 	args.mini_batch_size = 50;
-	args.max_iteration = 5000000;
+	args.max_iteration = 3000000;
 	args.epsilon = 0.0000001;
 	args.a = 0.01;
 	args.b = 1024;
@@ -41,17 +41,81 @@ int main(int argc, char *argv[]) {
 	const mcmc::Data *data = df.get_data();
 	mcmc::Network network(data, 0.01); 
 
+	/*
+	args.K = 20;
+	args.alpha = 0.01;
 
 	mcmc::learning::MCMCSamplerStochastic sampler(args, network);
 	sampler.run();
 
-	mcmc::learning::SGD sampler1(args, network);
+	args.alpha = 0.05;
+	mcmc::learning::MCMCSamplerStochastic sampler1(args, network);
 	sampler1.run();
 
+	args.alpha = 0.1;
+	mcmc::learning::MCMCSamplerStochastic sampler2(args, network);
+	sampler2.run();
+
+	args.alpha = 0.5;
+	mcmc::learning::MCMCSamplerStochastic sampler3(args, network);
+	sampler3.run();
+
+	args.alpha = 1;
+	mcmc::learning::MCMCSamplerStochastic sampler4(args, network);
+	sampler4.run();
+*/
+
 	
+	args.K = 15;
+	args.alpha = 0.01;
+	mcmc::learning::MCMCSamplerStochastic sampler(args, network);
+	//sampler.run();
+	network.set_num_pieces(10);
+	sampler.setNumNodeSample(10);
+	sampler.run();
+
+	mcmc::learning::MCMCSamplerStochastic sampler1(args, network);
+	network.set_num_pieces(20);
+	sampler1.setNumNodeSample(20);
+	sampler1.run();
+
+	mcmc::learning::MCMCSamplerStochastic sampler2(args, network);
+	network.set_num_pieces(30);
+	sampler2.setNumNodeSample(30);
+	sampler2.run();
+
+	mcmc::learning::MCMCSamplerStochastic sampler3(args, network);
+	network.set_num_pieces(50);
+	sampler3.setNumNodeSample(50);
+	sampler3.run();
+
+	mcmc::learning::MCMCSamplerStochastic sampler4(args, network);
+	network.set_num_pieces(70);
+	sampler4.setNumNodeSample(70);
+	sampler4.run();
+
+	mcmc::learning::MCMCSamplerStochastic sampler5(args, network);
+	network.set_num_pieces(100);
+	sampler5.setNumNodeSample(100);
+	sampler5.run();
+
+	mcmc::learning::MCMCSamplerStochastic sampler6(args, network);
+	network.set_num_pieces(150);
+	sampler6.setNumNodeSample(150);
+	sampler6.run();
+
+
+
+	
+	//mcmc::learning::MCMCSamplerStochastic sampler(args, network);
+	//sampler.run();
+
+	//mcmc::learning::SGD sampler1(args, network);
+	//sampler1.run();
+
 	
 	/*
-	for (int k = 150; k < 160; k=k+10){
+	for (int k = 10; k < 110; k=k+10){
 		clock_t t1, t2;
 		t1 = clock();
 		args.K = k;
