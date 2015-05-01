@@ -176,7 +176,7 @@ namespace mcmc {
 				clock_t t1, t2;
 				std::vector<double> timings;
 				t1 = clock();
-				int interval = 50;
+				int interval = 100;
 				while (step_count < max_iteration && !is_converged()) {
 					//if (step_count > 200000){
 						//interval = 2;
@@ -200,7 +200,7 @@ namespace mcmc {
 					// write into file 
 					if (step_count% 2000 == 1){
 						ofstream myfile;
-						std::string file_name = "mcmc_stochastic_" + std::to_string (K) + "_num_nodes_" + std::to_string(num_node_sample) + "_us_air.txt";
+						std::string file_name = "mcmc_stochastic_step_size" + std::to_string (K) +"_" + std::to_string(num_node_sample) + "_usair.txt";
   						myfile.open (file_name);
   						int size = ppxs_held_out.size();
   						for (int i = 0; i < size; i++){

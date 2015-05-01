@@ -1,5 +1,5 @@
-#ifndef MCMC_LEARNING_MCMC_SAMPLER_SGD_H__
-#define MCMC_LEARNING_MCMC_SAMPLER_SGD_H__
+#ifndef MCMC_LEARNING_MCMC_SAMPLER_STOCHASTIC_STATE_TRANSITION_H__
+#define MCMC_LEARNING_MCMC_SAMPLER_STOCHASTIC_STATE_TRANSITION_H__
 
 #include <cmath>
 
@@ -12,9 +12,9 @@
 
 #include "np.h"
 #include "myrandom.h"
+#include "learner_state_transition.h"
 // #include "mcmc/sample_latent_vars.h"
 
-#include "learner.h"
 #include "mcmc_sampler_batch.h"
 
 namespace mcmc {
@@ -23,7 +23,7 @@ namespace mcmc {
 		// typedef std::unordered_map<Edge, int>	EdgeMapZ;
 		typedef std::map<Edge, int>	EdgeMapZ;
 
-		class SGD : public Learner {
+		class MCMCSamplerStochasticStateTransition : public LearnerStateTransition {
 		public:
 			/**
 			Mini-batch based MCMC sampler for community overlapping problems. Basically, given a
@@ -53,8 +53,8 @@ namespace mcmc {
 			parameters for each iteration, here we only use mini-batch (subset) of the examples.
 			This method is great marriage between MCMC and stochastic methods.
 			*/
-			SGD(const Options &args, const Network &graph)
-				: Learner(args, graph) {
+			MCMCSamplerStochasticStateTransition(const Options &args, const Network &graph)
+				: LearnerStateTransition(args, graph) {
 
 				// step size parameters.
 				this->a = args.a;
@@ -65,7 +65,7 @@ namespace mcmc {
 				 //num_node_sample = static_cast< int>(std::sqrt(network.get_num_nodes()));
 				// TODO: automative update.....
 				num_node_sample = N/50;
-
+				threshold = 0.2/K;
 				// model parameters and re-parameterization
 				// since the model parameter - \pi and \beta should stay in the simplex,
 				// we need to restrict the sum of probability equals to 1.  The way we
@@ -77,7 +77,67 @@ namespace mcmc {
 				//theta = Random::random->gamma(100.0, 0.01, K, 2);		// parameterization for \beta
 				
 				theta = Random::random->gammaArray(eta[0], eta[1], K, 2);		// parameterization for \beta - K by 2
-				phi = Random::random->gammaArray(1, 1, N, K);					// parameterization for \pi   - N by K
+				
+				//phi = Random::random->gammaArray(1, 1, N, K);					// parameterization for \pi   - N by K
+				
+				// initialize active states for each node. We define the fixed number of 
+				// active states. 
+				int n_a = int(K/10);
+				for (int i = 0; i < N; i++){
+					double *tmp  = Random::random->gammaArray(1, 1, n_a);
+					auto comList = Random::random->sampleRange(K, n_a);
+					std::map<int, double> active;
+					// iterate again to find out the active states.
+					int idx = 0; 
+					for (std::vector<int>::const_iterator comId = comList->begin();
+						comId != comList->end();
+						comId++){
+						active[*comId] = tmp[idx++] + threshold;   // make sure they are greater than threshold 
+					}
+					phi_active.push_back(active);
+					delete[] tmp;
+				}
+
+				// initialize candidate states and bulk states
+				// for each node, this is done by selecting all the nodes that are active in neighboring
+				double sum = 0;
+				const vector<VertexSet> &train_link_map = network.get_neighbor_set(); 
+				for (int i = 0; i < N; i++){
+					double *tmp = Random::random->gammaArrayBelowThreshold(1, 1, K-n_a, threshold);
+					int idx = 0;
+					std::map<int, double> candidate;
+					sum = 0;
+					int size = 0;
+					for (int k = 0; k < K; k++){
+						// if k is not in active states, and k is active in neighboring nodes, 
+						// then add it into the candidate states. 
+						if (phi_active[i].find(k) == phi_active[i].end()){
+
+							VertexSet neighbors = train_link_map[i];
+							for(VertexSet::const_iterator neighborId = neighbors.begin(); neighborId != neighbors.end(); neighborId++){
+								int id = *neighborId;
+								if (phi_active[id].find(k) != phi_active[id].end()){
+									candidate[k] = tmp[idx++];
+									break;
+								}
+								sum += tmp[idx++];
+								size++;
+							}
+
+						}
+					}
+
+					phi_candidate.push_back(candidate);
+					phi_bulk.push_back(sum/size);
+
+					delete[] tmp;
+				}
+
+				// initialize pi_bulk
+				for (int i = 0; i < N; i++){
+					pi_bulk.push_back(0);
+				}
+
 
 				//theta = Random::random->gamma(1, 1, K, 2);
 				//phi = Random::random->gamma(1, 1, N, K);					// parameterization for \pi
@@ -98,16 +158,41 @@ namespace mcmc {
 
 			void update_pi_from_phi(){
 				for (int i = 0; i < N; i++){
-					double sum = 0;
-					for (int k = 0; k < K; k++){
-						sum += phi[i][k];
-					}
-					for (int k = 0; k < K; k++){
-						pi[i][k] = phi[i][k] / sum;
-						//cout<<pi[i][k]<< " ";
-					}
-					//cout<<endl;
+					update_pi_from_phi(i);
 				}
+			}
+
+			// update pi for node i. 
+			void update_pi_from_phi(int i){
+				
+				double sum = 0;
+				std::map<int, double> active = phi_active[i];
+				for (std::map<int, double>::iterator it = active.begin(); it != active.end(); ++it){
+					sum += it->second;
+				}
+
+				std::map<int, double> candidate = phi_candidate[i];
+				for (std::map<int, double>::iterator it = candidate.begin(); it != candidate.end(); ++it){
+					sum += it->second;
+				}				
+
+				sum += phi_bulk[i] * (K - active.size() - candidate.size());
+				std::cout<<K - active.size() - candidate.size()<<" "<<sum<<endl;
+
+				// update pi by normalizing phi 
+				std::map<int, double> active_new;
+				std::map<int, double> candidate_new;
+				for (std::map<int, double>::iterator it = active.begin(); it != active.end(); ++it){
+					active_new[it->first] = it->second/sum;
+
+				}
+				for (std::map<int, double>::iterator it = candidate.begin(); it != candidate.end(); ++it){
+					candidate_new[it->first] = it->second/sum;
+				}
+
+				pi_active.push_back(active_new);
+				pi_candidate.push_back(candidate_new);
+				pi_bulk[i] = phi_bulk[i]/sum;
 			}
 
 			void update_beta_from_theta(){
@@ -118,36 +203,37 @@ namespace mcmc {
 					}
 					// beta[k] = theta[k][1]/(theta[k][0] + theta[k][1])
 					beta[k] = theta[k][1] / sum;
+
 				}
 			}
 
-			virtual ~SGD() {
+			virtual ~MCMCSamplerStochasticStateTransition() {
 			}
 
 			virtual void run() {
 
-				/** run mini-batch based MCMC sampler, based on the sungjin's note */
+				/** run mini-batch based MCMC sampler */
 				clock_t t1, t2;
 				std::vector<double> timings;
 				t1 = clock();
-				int interval = 100;
+				int interval = 1;
+				
 				while (step_count < max_iteration && !is_converged()) {
 					//if (step_count > 200000){
-					//	interval = 2;
+						//interval = 2;
 					//}
-					if (step_count % interval == 1){
-
+				
+					if (step_count % interval == 0){
 						double ppx_score = cal_perplexity_held_out();
-						std::cout << std::fixed << std::setprecision(12) << "step count: "<<step_count<<"perplexity for hold out set: " << ppx_score << std::endl;
+						
+						//std::cout << std::fixed << std::setprecision(12) << "step count: "<<step_count<<"perplexity for hold out set: " << ppx_score << std::endl;
 						ppxs_held_out.push_back(ppx_score);
-
-
+						//std::cout<<"1111111";
 
 						t2 = clock();
 						float diff = ((float)t2 - (float)t1);
 						float seconds = diff / CLOCKS_PER_SEC;
 						timings.push_back(seconds);
-
 						iterations.push_back(step_count);
 					}
 
@@ -155,7 +241,7 @@ namespace mcmc {
 					// write into file 
 					if (step_count% 2000 == 1){
 						ofstream myfile;
-						std::string file_name = "mcmc_sgd_" + std::to_string (K) + "_sgld_sgd_"+"_usair_.txt";
+						std::string file_name = "mcmc_stochastic_step_size" + std::to_string (K) +"_" + std::to_string(num_node_sample) + "_usair.txt";
   						myfile.open (file_name);
   						int size = ppxs_held_out.size();
   						for (int i = 0; i < size; i++){
@@ -183,6 +269,7 @@ namespace mcmc {
 					//std::unordered_map<int, int> size;
 
 					// iterate through each node in the mini batch.
+					
 					OrderedVertexSet nodes = nodes_in_batch(mini_batch);
 					for (auto node = nodes.begin();
 						node != nodes.end();
@@ -190,9 +277,10 @@ namespace mcmc {
 						//cout<<"current node is: "<<*node<<endl;
 						OrderedVertexSet neighbors = sample_neighbor_nodes(num_node_sample, *node);
 						update_phi(*node, neighbors);
+						update_pi_from_phi(*node);
 					}
 					//np::row_normalize(&pi, phi);	// update pi from phi. 
-					update_pi_from_phi();
+					
 					// update beta
 					update_beta(mini_batch, scale);
 
@@ -241,9 +329,32 @@ namespace mcmc {
 					double* probs = new double[K]();
 					//std::vector<double> probs(K);
 					double pi_sum = 0.0;
+					std::map<int, double> active_i = pi_active[i];
+					std::map<int, double> candidate_i = pi_candidate[i];
+					std::map<int, double> active_j = pi_active[j];
+					std::map<int, double> candidate_j = pi_candidate[j];
+					
 					for (int k = 0; k < K; k++){
-						pi_sum += pi[i][k] * pi[j][k];
-						probs[k] = std::pow(beta[k], y) * std::pow(1 - beta[k], 1 - y) * pi[i][k] * pi[j][k];
+						double term1;
+						double term2;
+						if (active_i.find(k) != active_i.end()){
+							term1 = active_i[k];
+						} else if (candidate_i.find(k) != candidate_i.end()){
+							term1 = candidate_i[k];
+						} else{
+							term1 = pi_bulk[i];
+						}
+
+						if (active_j.find(k) != active_j.end()){
+							term2 = active_j[k];
+						} else if (candidate_j.find(k) != candidate_j.end()){
+							term2 = candidate_j[k];
+						} else{
+							term2 = pi_bulk[j];
+						}
+
+						pi_sum += term1 * term2;
+						probs[k] = std::pow(beta[k], y) * std::pow(1 - beta[k], 1 - y) * term1 * term2;
 					}
 
 					double prob_0 = std::pow(epsilon, y) * std::pow(1 - epsilon, 1 - y) * (1 - pi_sum);
@@ -260,8 +371,8 @@ namespace mcmc {
 				double** noise;
 				noise = new double*[K];
 				for (int k = 0; k < K; k++){
-					//noise[k] = Random::random->randnArray(2);
-					noise[k] = new double[2]();
+					noise[k] = Random::random->randnArray(2);
+					//noise[k] = new double[2]();
 				}
 				//std::vector<std::vector<double> > noise = Random::random->randn(K, 2);
 				//std::vector<std::vector<double> > theta_star(theta);
@@ -288,7 +399,7 @@ namespace mcmc {
 				delete[] grads;
 				//theta = theta_star;
 				update_beta_from_theta();
-				//std::vector<std::vector<double> > temp(theta.size(), std::vector<double>(theta[0].size()));
+//std::vector<std::vector<double> > temp(theta.size(), std::vector<double>(theta[0].size()));
 				//np::row_normalize(&temp, theta);
 				//std::transform(temp.begin(), temp.end(), beta.begin(), np::SelectColumn<double>(1));
 			}
@@ -302,17 +413,53 @@ namespace mcmc {
 				return s;
 			}
 
+			// sum of all the phi values for given node.  This simply sums up all the values within active, candidate 
+			// bulk state. 
+			double getSum(std::map<int ,double> active, std::map<int, double> candidate, double bulk, int K){
+				double sum = 0;
+				for (std::map<int, double>::iterator it = active.begin(); it!=active.end(); ++it){
+					sum += it->second;
+				}
+				for (std::map<int, double>::iterator it = candidate.begin(); it!=candidate.end(); ++it){
+					sum += it->second;
+				}
 
-			void update_phi(int i, const OrderedVertexSet &neighbors){
+				sum += (K - active.size() - candidate.size()) * bulk;
+
+				return sum;
+			}
+
+
+			void update_phi(int i, const OrderedVertexSet &neighbors){ 
 				double eps_t = a * std::pow(1 + step_count / b, -c);	// step size
 				//double eps_t = std::pow(1024+step_count, -0.5);
-				double phi_i_sum = getSum(phi[i], K);
+				double phi_i_sum = getSum(phi_active[i], phi_candidate[i], phi_bulk[i], K);
+
 				//std::vector<double> grads(K);							// gradient for K classes
 				double* grads = new double[K]();
 				std::vector<double> phi_star(K);                        // temp vars
 				//std::vector<double> noise = Random::random->randn(K);	// random gaussian noise.
-				//double* noise = Random::random->randnArray(K);
-				double* noise = new double[K]();
+				double* noise = Random::random->randnArray(K);
+				//double* noise = new double[K]();
+
+				// expand the phi[i] and pi[i] to full K vector
+				double* phi_i_copy = new double[K];
+				double* pi_i_copy = new double[K];
+				for (int k = 0; k < K; k++){
+					if (phi_active[i].find(k) != phi_active[i].end()){
+						phi_i_copy[k] = phi_active[i][k];
+						pi_i_copy[k] = pi_active[i][k];
+
+					}else if(phi_candidate[i].find(k) != phi_candidate[i].end()){
+						phi_i_copy[k] = phi_candidate[i][k];
+						pi_i_copy[k] = pi_candidate[i][k];
+					}else{
+						phi_i_copy[k] = phi_bulk[i];
+						pi_i_copy[k] = pi_bulk[i];
+					}
+				}
+				
+
 				for (auto neighbor = neighbors.begin();
 					neighbor != neighbors.end();
 					neighbor++) {
@@ -327,24 +474,80 @@ namespace mcmc {
 						y_ab = 1;
 					}
 
+					int neighbor_id = *neighbor;
+					// 
+					// expand the phi[neighbor_id] and pi[neighbor_id] to full K vector
+					double* pi_nei_copy = new double[K];
+					for (int k = 0; k < K; k++){
+						if (phi_active[neighbor_id].find(k) != phi_active[neighbor_id].end()){
+							pi_nei_copy[k] = pi_active[neighbor_id][k];
+						}else if(phi_candidate[neighbor_id].find(k) != phi_candidate[neighbor_id].end()){
+							pi_nei_copy[k] = pi_candidate[neighbor_id][k];
+						}else{
+							pi_nei_copy[k] = pi_bulk[neighbor_id];
+						}
+					}
+
 					double* probs = new double[K]();
 					//std::vector<double> probs(K);
 					for (int k = 0; k < K; k++){
-						probs[k] = std::pow(beta[k], y_ab) * std::pow(1 - beta[k], 1 - y_ab) * pi[i][k] * pi[*neighbor][k];
-						probs[k] += std::pow(epsilon, y_ab) * std::pow(1 - epsilon, 1 - y_ab) * pi[i][k] * (1 - pi[*neighbor][k]);
+						probs[k] = std::pow(beta[k], y_ab) * std::pow(1 - beta[k], 1 - y_ab) * pi_i_copy[k] * pi_nei_copy[k];
+						probs[k] += std::pow(epsilon, y_ab) * std::pow(1 - epsilon, 1 - y_ab) * pi_i_copy[k] * (1 - pi_nei_copy[k]);
 					}
+
+					delete[] pi_nei_copy;
 
 					double prob_sum = getSum(probs, K);
 					for (int k = 0; k < K; k++){
-						grads[k] += (probs[k] / prob_sum) / phi[i][k] - 1.0 / phi_i_sum;
+						grads[k] += (probs[k] / prob_sum) / phi_i_copy[k] - 1.0 / phi_i_sum;
 					}
 					delete[] probs;
 				}
 				// update phi for node i
 				for (int k = 0; k < K; k++){
-					phi[i][k] = std::abs(phi[i][k] + eps_t / 2 * (alpha - phi[i][k] + (N*1.0 / num_node_sample) *grads[k]) + std::pow(eps_t, 0.5)*std::pow(phi[i][k], 0.5) *noise[k]);
+					phi_i_copy[k] = std::abs(phi_i_copy[k] + eps_t / 2 * (alpha - phi_i_copy[k] + (N*1.0 / num_node_sample) *grads[k]) + std::pow(eps_t, 0.5)*std::pow(phi_i_copy[k], 0.5) *noise[k]);
+				}	
+				
+				// update phi for node i. This will use state transition to accomplish that. 
+				std::map<int, double> active_new; 
+				std::map<int, double> candidate_new;
+				std::map<int, double> bulk_new;
+
+				// 1 .find all the active states from the neighbors. 
+				std::set<int> active_set;
+				for (auto neighbor = neighbors.begin();
+					neighbor != neighbors.end();
+					neighbor++) {
+					int id = *neighbor;
+					std::map<int ,double> tmp_active;
+					for (std::map<int, double>::iterator it = tmp_active.begin(); it != tmp_active.end(); ++it){
+						active_set.insert(it->first);
+					}
+				}
+				
+				double sum_bulk = 0;
+				// 2. construct new active, candidate, and bulk state
+				for (int k = 0; k < K; k++){
+					if (phi_i_copy[k] > threshold){
+						active_new[k] = phi_i_copy[k];
+					
+					} else if (active_set.find(k) != active_set.end()){
+						candidate_new[k] = phi_i_copy[k];
+					} else{
+						bulk_new[k] = phi_i_copy[k];
+						sum_bulk += bulk_new[k];
+					}
 				}
 
+				// 3. update phi 
+				phi_active[i] = active_new;
+				phi_candidate[i] = candidate_new;
+				phi_bulk[i] = sum_bulk/(bulk_new.size());
+
+
+				//delete bulk_new;
+				delete[] phi_i_copy;
+				delete[] pi_i_copy;			
 				delete[] noise;
 				delete[] grads;
 				// assign back to phi. 
@@ -476,10 +679,28 @@ namespace mcmc {
 				}
 
 #endif 
+		public:
+			void setNumNodeSample(int numSample){
+				num_node_sample = numSample;
+			}
 
-		void setNumNodeSample(int numSample){
-			num_node_sample = numSample;
-		}
+		public:
+			double** getTheta(){
+			// create new copy 
+			double** result;
+			result = new double*[K];
+			for (int i = 0; i < K; i++){
+				result[i] = new double[2]();
+			}
+			for (int i = 0; i < K; i++){
+				for (int k=0;k<2;k++){
+					result[i][k] = theta[i][k];
+				}
+			}
+
+			return result;
+
+			}
 
 		protected:
 			// replicated in both mcmc_sampler_
@@ -488,11 +709,14 @@ namespace mcmc {
 			double	c;
 
 			int num_node_sample;
-
-			//std::vector<std::vector<double> > theta;		// parameterization for \beta
-			//std::vector<std::vector<double> > phi;			// parameterization for \pi
-			double** theta;
-			double** phi;
+			double threshold;
+			
+			double** theta;		// this is for community strenght   
+			std::vector<std::map<int, double> > phi_active;
+			std::vector<std::map<int, double> > phi_candidate;
+			std::vector<double> phi_bulk;
+			
+			//double** phi;		
 		};
 
 	}	// namespace learning

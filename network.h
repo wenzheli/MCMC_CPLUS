@@ -60,7 +60,7 @@ namespace mcmc {
 			// randomly sample hold-out and test sets.
 			init_held_out_set();
 			init_test_set();
-			num_pieces = 50;  // by default
+			num_pieces = 10;  // by default
 		}
 
 		virtual ~Network() {
@@ -122,17 +122,17 @@ namespace mcmc {
 		const EdgeMap &get_test_set() const {
 			return test_map;
 		}
+		
+		const vector<VertexSet> &get_neighbor_set() const{
+			return train_link_map;
+		}
 
 public:
 		void set_num_pieces(int num_pieces) {
 			this->num_pieces = num_pieces;
 		}
 
-
 		
-
-
-	
 
 		/**
 		* stratified sampling approach gives more attention to link edges (the edge is connected by two

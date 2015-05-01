@@ -178,6 +178,31 @@ namespace mcmc {
 			}
 
 
+			double * gammaArray(double p1, double p2, int n){
+				double* a;
+				a = new double[n];
+				std::gamma_distribution<double> gammaDistribution(p1, p2);
+				for (int i = 0; i < n; i++){
+					a[i] = gammaDistribution(generator);
+				}
+
+				return a;
+			}
+
+			double * gammaArrayBelowThreshold(double p1, double p2, int n, double threshold){
+				double* a;
+				a = new double[n];
+				std::gamma_distribution<double> gammaDistribution(p1, p2);
+				for (int i = 0; i < n; i++){
+					a[i] = gammaDistribution(generator);
+					if (a[i] > threshold){
+						a[i] = threshold;
+					}
+				}
+				
+				return a;
+			}
+
 			double** gammaArray(double p1, double p2, int n1, int n2){
 				double** a;
 				a = new double*[n1];

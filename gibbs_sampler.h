@@ -79,7 +79,7 @@ public:
 		while (step_count < max_iteration && !is_converged()) {
 			
 			//print "step: " + str(self._step_count)
-			cout<<"calling hold out...";
+			//cout<<"calling hold out...";
 			double ppx_score = cal_perplexity_held_out();
 			std::cout << std::fixed << std::setprecision(12) << "perplexity for hold out set: " << ppx_score << std::endl;
 			ppxs_held_out.push_back(ppx_score);
@@ -93,9 +93,11 @@ public:
 			update_pi_beta();
 
             // write into file 
-            if (step_count% 1000 == 1){
+            if (step_count% 2000 == 1){
                 ofstream myfile;
-                myfile.open ("gibbs_20_us_air.txt");
+                std::string file_name = "gibbs_" + std::to_string (K)   + "_us_air.txt";
+  				myfile.open (file_name);
+          
                 int size = ppxs_held_out.size();
                 for (int i = 0; i < size; i++){
                     int iteration = i * 1 + 1;

@@ -318,9 +318,10 @@ namespace mcmc {
 					update_beta();
 
 					// write into file 
-					if (step_count% 1000 == 1){
+					if (step_count% 2000 == 1){
 						ofstream myfile;
-  						myfile.open ("mcmc_batch_20_us_air.txt");
+						std::string file_name = "mcmc_batch_" + std::to_string (K)   + "_us_air.txt";
+  						myfile.open (file_name);
   						int size = ppxs_held_out.size();
   						for (int i = 0; i < size; i++){
   							int iteration = i * 1 + 1;

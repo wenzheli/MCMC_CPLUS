@@ -23,7 +23,7 @@ namespace mcmc {
 			const int MAX_NODES = 40000;
 
 		public:
-			Relativity(const std::string &filename) : DataSet(filename == "" ? "CA-AstroPh.txt" : filename) {
+			Relativity(const std::string &filename) : DataSet(filename == "" ? "US_AIR.txt" : filename) {
 			}
 
 			virtual ~Relativity() {
